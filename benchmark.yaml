@@ -1,0 +1,78 @@
+name: split-stages-plan
+id: split_stages_plan
+description: This benchmark lays out stages for each step of an scRNA-seq pipeline
+benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
+
+# Benchmark configuration
+version: "0.1.0"
+
+# The default software environment for this benchmark.
+# One of: apptainer, conda, envmodules.
+software_backend: "apptainer"
+
+# Available software environments
+
+software_environments:
+    apptainer_env:
+        name: nicely packaged environment
+        description: A more verbose description, for humans reading this
+        apptainer: envs/example.sif
+
+# Stages and modules for your benchmark
+
+stages:
+  - id: datasets
+    outputs:
+        - id: data.matrix
+          path: "{dataset}.data.gz"
+        - id: data.true_labels
+          path: "{dataset}.gz"
+    modules:
+      - id: dataset_loader
+        name: "loads the benchmark datasets"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/data_loader
+          commit: 366c5a2
+        parameters:
+            # A single parameter dict
+            - param1: "value"
+              param2: "other_value"
+
+            # A combinatorial grid expansion
+            - param1: "value"
+              param2: ["1", "2", "3"]
+
+  - id: methods
+    inputs:
+        - data.matrix
+        - data.true_labels
+    outputs:
+      - id: clustering.predicted
+        path: "{dataset}_predicted.labels.gz"
+    modules:
+      - id: cool_method_1
+        name: "the only method you will ever need"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/my_method
+          commit: deadbeef
+        parameters:
+          - param1: "value"
+
+  - id: metrics
+    inputs:
+        - clustering.predicted
+        - data.true_labels
+    outputs:
+      - id: metrics.scores
+        path: "{dataset}.scores.gz"
+    modules:
+      - id: strict_metric_1
+        name: "a very well defined metric"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/the_right_metric
+          commit: c0ffee
+        parameters:
+          - foo: "bar"

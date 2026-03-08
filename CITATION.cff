@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, please cite it as below."
+type: software
+title: "split-stages-plan"
+authors:
+  - family-names: "Robinson"
+    given-names: "Mark"
+    email: "mark.robinson@mls.uzh.ch"
+version: "0.1.0"
+date-released: "2026-03-08"
+url: "https://github.com/CHANGE_ME/split-stages-plan"
+abstract: "This benchmark lays out stages for each step of an scRNA-seq pipeline"
+license: MIT
+keywords:
+  - benchmark
+  - bioinformatics
+  - omnibenchmark
