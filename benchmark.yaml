@@ -4,7 +4,7 @@ description: This benchmark lays out stages for each step of an scRNA-seq pipeli
 benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
 
 # Benchmark configuration
-version: "0.1.0"
+version: "0.0.2"
 
 # The default software environment for this benchmark.
 # One of: apptainer, conda, envmodules.
@@ -18,15 +18,15 @@ software_environments:
         description: A more verbose description, for humans reading this
         apptainer: envs/example.sif
 
-# Stages and modules for your benchmark
-
 stages:
-  - id: datasets
+  - id: 1-data
     outputs:
-        - id: data.matrix
+        - id: 1-data.matrix
           path: "{dataset}.data.gz"
-        - id: data.true_labels
+        - id: 1-data.true_labels
           path: "{dataset}.gz"
+        - id: 1-data.metadata
+          path: "{dataset}.metadata.gz"
     modules:
       - id: dataset_loader
         name: "loads the benchmark datasets"
@@ -35,21 +35,84 @@ stages:
           url: https://github.com/CHANGEME/data_loader
           commit: 366c5a2
         parameters:
-            # A single parameter dict
-            - param1: "value"
-              param2: "other_value"
-
             # A combinatorial grid expansion
             - param1: "value"
               param2: ["1", "2", "3"]
 
-  - id: methods
+  - id: 2-filter
     inputs:
-        - data.matrix
-        - data.true_labels
+        - 1-data.matrix
+        - 1-data.true_labels
     outputs:
-      - id: clustering.predicted
-        path: "{dataset}_predicted.labels.gz"
+      - id: 2-filter.cellids
+        path: "{dataset}_cellids.txt.gz"
+    modules:
+      - id: filter_method_1
+        name: "the only method you will ever need"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/my_method
+          commit: deadbeef
+        parameters:
+          - param1: "value"
+
+  - id: 3-normalize
+    inputs:
+        - 1-data.matrix
+        - 2-filter.cellids
+    outputs:
+      - id: 3-normalize.normalized
+        path: "{dataset}_normalized.txt.gz"
+    modules:
+      - id: normalization_method_1
+        name: "the only method you will ever need"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/my_method
+          commit: deadbeef
+        parameters:
+          - param1: "value"
+          
+
+  - id: 4-select
+    inputs:
+        - 3-normalize.normalized
+    outputs:
+      - id: 4-select.selected
+        path: "{dataset}_selected.txt.gz"
+    modules:
+      - id: featselect_method_1
+        name: "the only method you will ever need"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/my_method
+          commit: deadbeef
+        parameters:
+          - param1: "value"
+
+  - id: 5-pca
+    inputs:
+        - 3-normalize.normalized
+        - 4-select.selected
+    outputs:
+      - id: 5-pca.pca
+        path: "{dataset}_pca.txt.gz"
+    modules:
+      - id: whizbang_pca_method_1
+        name: "the only method you will ever need"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/my_method
+          commit: deadbeef
+        parameters:
+          - param1: "value"
+
+  - id: 6-viz
+    inputs:
+        - 5-pca.pca
+    outputs:
+      - id: 6-viz.components
+        path: "{dataset}_components.txt.gz"
     modules:
       - id: cool_method_1
         name: "the only method you will ever need"
@@ -60,10 +123,72 @@ stages:
         parameters:
           - param1: "value"
 
+  - id: 7-integrate
+    inputs:
+        - 5-pca.pca
+    outputs:
+      - id: 7-integrate.integrated
+        path: "{dataset}_integrated.txt.gz"
+    modules:
+      - id: integration_method_1
+        name: "the only method you will ever need"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/my_method
+          commit: deadbeef
+        parameters:
+          - param1: "value"
+
+
+  - id: 8a-cluster
+    inputs:
+        - 5-pca.pca
+        - 3-normalize.normalized
+        - 7-integrate.integrated
+    outputs:
+      - id: 8a-cluster.graph
+        path: "{dataset}_graph.txt.gz"
+      - id: 8a-cluster.clusters
+        path: "{dataset}_clusters.txt.gz"
+    modules:
+      - id: whizbang_clustering_1
+        name: "the only method you will ever need"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/my_method
+          commit: deadbeef
+        parameters:
+          - param1: "value"
+
+
+  - id: 8b-annotate
+    inputs:
+        - 5-pca.pca
+        - 3-normalize.normalized
+        - 7-integrate.integrated
+    outputs:
+      - id: 8b-annotate.annotations
+        path: "{dataset}_annotations.txt.gz"
+    modules:
+      - id: whizbang_prediction_1
+        name: "the only method you will ever need"
+        software_environment: "apptainer_env"
+        repository:
+          url: https://github.com/CHANGEME/my_method
+          commit: deadbeef
+        parameters:
+          - param1: "value"
+
+
   - id: metrics
     inputs:
-        - clustering.predicted
-        - data.true_labels
+        - 5-pca.pca
+        - 3-normalize.normalized
+        - 6-viz.components
+        - 7-integrate.integrated
+        - 8a-cluster.clusters
+        - 8a-cluster.graph
+        - 8b-annotate.annotations
     outputs:
       - id: metrics.scores
         path: "{dataset}.scores.gz"
