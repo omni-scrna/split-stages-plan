@@ -1,15 +1,16 @@
 ---
 name: r_conda
 channels:
+  - https://prefix.dev/almost-conductor
   - conda-forge
   - bioconda
 dependencies:
-  - r-base=4.5.3=h15dba0b_1
-  - python=3.9
+  - r-base=4.5.3
+  - bioconductor-edger >= 4.8.0
   - bioconductor-dropletutils
   - bioconductor-geoquery
   - bioconductor-singlecellmultimodal
   - bioconductor-tenxbraindata
-  - bioconductor-zellkonverter
+  - bioconductor-anndatar
   - r-argparse
   - r-stringr
