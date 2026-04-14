@@ -12,5 +12,6 @@ dependencies:
   - bioconductor-singlecellmultimodal
   - bioconductor-tenxbraindata
   - bioconductor-anndatar
+  - bioconductor-scrapper
   - r-argparse
   - r-stringr
