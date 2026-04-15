@@ -48,7 +48,7 @@ stages:
         software_environment: "r_conda"
         repository:
           url: https://github.com/scrna-bench/2-filter
-          commit: "a191766"
+          commit: "75b7cea"
         parameters:
           - filter_type: ["manual", "scrapper-auto"]
 
