@@ -14,7 +14,7 @@ software_backend: "conda"
 
 software_environments:
     r_conda:
-        name: slim-ish R/BioC env (not starting from rocker)
+        name: R conda env (some packages self built)
         conda: envs/r.yml
 
 stages:
@@ -28,7 +28,7 @@ stages:
         path: "{dataset}.clusters_truth_num.txt"
     modules:
       - id: datasets
-        name: loads scRNA datasets
+        name: "R-based dataset downloads"
         software_environment: r_conda
         repository:
           url: https://github.com/scrna-bench/datasets
@@ -43,8 +43,8 @@ stages:
       - id: filter.cellids
         path: "{dataset}_cellids.txt.gz"
     modules:
-      - id: filtering
-        name: "Implement cell filters"
+      - id: filtering-r
+        name: "R-based cell-level filters"
         software_environment: "r_conda"
         repository:
           url: https://github.com/scrna-bench/2-filter
@@ -52,23 +52,22 @@ stages:
         parameters:
           - filter_type: ["manual", "scrapper-auto"]
 
-#  - id: 3-normalize
-#    inputs:
-#        - 1-data.matrix
-#        - 2-filter.cellids
-#    outputs:
-#      - id: 3-normalize.normalized
-#        path: "{dataset}_normalized.txt.gz"
-#    modules:
-#      - id: normalization_method_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
-          
+  - id: 3-normalize
+    inputs:
+        - rawdata.h5ad
+        - filter.cellids
+    outputs:
+      - id: normalized.h5ad
+        path: "{dataset}_normalized.txt.gz"
+    modules:
+      - id: normalization-r
+        name: "R-based scRNA-seq normalization methods"
+        software_environment: "r_conda"
+        repository:
+          url: https://github.com/scrna-bench/3-normalize
+          commit: 1c54ae8
+        parameters:
+          - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
 
 #  - id: 4-select
 #    inputs:
