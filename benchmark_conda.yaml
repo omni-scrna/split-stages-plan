@@ -69,21 +69,23 @@ stages:
         parameters:
           - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
 
-#  - id: 4-select
-#    inputs:
-#        - normalized.h5
-#    outputs:
-#      - id: selected.genes
-#        path: "{dataset}_selected.txt.gz"
-#    modules:
-#      - id: featselect_method_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
+  - id: 4-select
+    inputs:
+        - normalized.h5
+        - filtered.cellids
+    outputs:
+      - id: selected.genes
+        path: "{dataset}_selected.txt.gz"
+    modules:
+      - id: selection-r
+        name: "R-based scRNA-seq gene selection methods"
+        software_environment: "r_conda"
+        repository:
+          url: https://github.com/scrna-bench/4-select
+          commit: "63531d9"
+        parameters:
+          - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
+            number_selected: 2000
 
 #  - id: 5-pca
 #    inputs:
