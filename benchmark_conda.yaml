@@ -40,7 +40,7 @@ stages:
     inputs:
         - rawdata.h5ad
     outputs:
-      - id: filter.cellids
+      - id: filtered.cellids
         path: "{dataset}_cellids.txt.gz"
     modules:
       - id: filtering-r
@@ -55,25 +55,25 @@ stages:
   - id: 3-normalize
     inputs:
         - rawdata.h5ad
-        - filter.cellids
+        - filtered.cellids
     outputs:
-      - id: normalized.h5ad
-        path: "{dataset}_normalized.mtx.gz"
+      - id: normalized.h5
+        path: "{dataset}_normalized.h5"
     modules:
       - id: normalization-r
         name: "R-based scRNA-seq normalization methods"
         software_environment: "r_conda"
         repository:
           url: https://github.com/scrna-bench/3-normalize
-          commit: "769865c"
+          commit: "1894cf3"
         parameters:
           - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
 
 #  - id: 4-select
 #    inputs:
-#        - 3-normalize.normalized
+#        - normalized.h5
 #    outputs:
-#      - id: 4-select.selected
+#      - id: selected.genes
 #        path: "{dataset}_selected.txt.gz"
 #    modules:
 #      - id: featselect_method_1
