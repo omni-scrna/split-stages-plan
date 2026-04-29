@@ -1,6 +1,8 @@
 # OmniBenchmark outputs
 out/
 .snakemake/
+.obmr.lock
+/.obmr
 
 # Python
 __pycache__/
