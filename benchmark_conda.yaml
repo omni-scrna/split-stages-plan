@@ -53,7 +53,7 @@ stages:
         name: "R-based cell-level filters"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/scrna-bench/2-filter
+          url: https://github.com/omni-scrna/2-filter
           commit: "75b7cea"
         parameters:
           - filter_type: ["manual", "scrapper-auto"]
@@ -70,7 +70,7 @@ stages:
         name: "R-based scRNA-seq normalization methods"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/scrna-bench/3-normalize
+          url: https://github.com/omni-scrna/3-normalize
           commit: "1894cf3"
         parameters:
           - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
@@ -86,7 +86,7 @@ stages:
         name: "R-based scRNA-seq gene selection methods"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/scrna-bench/4-select
+          url: https://github.com/omni-scrna/4-select
           commit: "6cd1817"
         parameters:
           - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
@@ -126,22 +126,25 @@ stages:
           - solver: [exact, irlba, random]
             n_components: 50
             random_seed: 42
+          - solver: [exact, irlba, random]
+            n_components: 50
+            random_seed: 42
 
-#  - id: six-viz
-#    inputs:
-#        - 5-pca.pca
-#    outputs:
-#      - id: 6-viz.components
-#        path: "{dataset}_components.txt.gz"
-#    modules:
-#      - id: cool_method_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
+  - id: six-viz
+    inputs:
+      - pca
+    outputs:
+      - id: viz.components
+        path: "{dataset}_components.txt.gz"
+    modules:
+      - id: viz-r
+        name: R-based non-linear embeddings
+        software_environment: r_conda
+        repository:
+          url: https://github.com/omni-scrna/6-viz
+          commit: "b95d31e"
+        parameters:
+          - perplexity: 30
 
 #  - id: seven-integrate
 #    inputs:
