@@ -22,6 +22,9 @@ software_environments:
     scrapper:
         name: scrapper multi-module
         conda: envs/scrapper.yml
+    py_conda:
+        name: Python conda env 
+        conda: envs/py.yml
 
 stages:
   - id: one-data
@@ -57,6 +60,14 @@ stages:
           commit: "75b7cea"
         parameters:
           - filter_type: ["manual", "scrapper-auto"]
+      - id: filtering-py
+        name: "Python-based cell-level filters"
+        software_environment: "py_conda"
+        repository:
+          url: https://github.com/omni-scrna/2-filter-py
+          commit: "64b89e6"
+        parameters:
+          - filter_type: ["manual"]
 
   - id: three-normalize
     inputs:
@@ -74,6 +85,14 @@ stages:
           commit: "1894cf3"
         parameters:
           - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
+      - id: normalization-py
+        name: "Python-based scRNA-seq normalization methods"
+        software_environment: "py_conda"
+        repository:
+          url: https://github.com/omni-scrna/3-normalize-py
+          commit: "6a95673"
+        parameters:
+          - normalization_type: ["scanpy_log1pCP10k"]
 
   - id: four-select
     inputs:
@@ -86,11 +105,20 @@ stages:
         name: "R-based scRNA-seq gene selection methods"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/scrna-bench/4-select
+          url: https://github.com/omni-scrna/4-select
           commit: "6cd1817"
         parameters:
           - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
             number_selected: 2000
+      - id: selection-py
+        name: "Python-based scRNA-seq gene selection methods"
+        software_environment: "py_conda"
+        repository:
+          url: https://github.com/omni-scrna/4-select-py
+          commit: "b3edf2e"
+        parameters:
+          - selection_type: ["scanpy_hvg"]
+            number_selected: 2000     
 
   - id: five-pca
     resources:
