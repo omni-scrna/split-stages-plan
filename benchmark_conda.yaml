@@ -126,9 +126,6 @@ stages:
           - solver: [exact, irlba, random]
             n_components: 50
             random_seed: 42
-          - solver: [exact, irlba, random]
-            n_components: 50
-            random_seed: 42
 
   - id: six-viz
     inputs:
@@ -141,8 +138,8 @@ stages:
         name: R-based non-linear embeddings
         software_environment: r_conda
         repository:
-          url: https://github.com/omni-scrna/6-viz
-          commit: "b95d31e"
+          url: /Users/mark/projects/omb/6-viz
+          commit: main
         parameters:
           - perplexity: 30
 
