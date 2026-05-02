@@ -38,7 +38,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: "1556e23"
+          commit: "5629065"
         parameters:
           - dataset_name: ["sc-mix"]
 
@@ -54,7 +54,7 @@ stages:
         software_environment: "r_conda"
         repository:
           url: https://github.com/omni-scrna/2-filter
-          commit: "75b7cea"
+          commit: "ac74749"
         parameters:
           - filter_type: ["manual", "scrapper-auto"]
 
@@ -79,69 +79,69 @@ stages:
     inputs:
       - normalized.h5
     outputs:
-      - id: selected.genes
-        path: "{dataset}_selected.txt.gz"
+      - id: normalized_selected.h5
+        path: "{dataset}_normalized_selected.h5"
     modules:
       - id: selection-r
         name: "R-based scRNA-seq gene selection methods"
         software_environment: "r_conda"
         repository:
           url: https://github.com/omni-scrna/4-select
-          commit: "6cd1817"
+          commit: "25768b0"
         parameters:
           - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
             number_selected: 2000
 
-  - id: five-pca
-    resources:
-      cores: 4
-    inputs:
-      - normalized.h5
-      - selected.genes
-    outputs:
-      - id: pca
-        path: "{dataset}_pca.h5"
-        # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
-        # path: "{name}_{params.solver}_n_{params.n_components}.h5"
-    modules:
-      - id: pca-scanpy
-        name: "scanpy PCA"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: "eb37d83"
-          entrypoint: pca
-        parameters:
-          - solver: [arpack, randomized]
-            n_components: 50
-            random_seed: 42
-      - id: pca-scrapper
-        name: "scrapper PCA"
-        software_environment: "scrapper"
-        repository:
-          url: https://github.com/omni-scrna/scrapper
-          commit: "114a956"
-          entrypoint: pca
-        parameters:
-          - solver: [exact, irlba, random]
-            n_components: 50
-            random_seed: 42
+  #- id: five-pca
+  #  resources:
+  #    cores: 4
+  #  inputs:
+  #    - normalized.h5
+  #    - selected.genes
+  #  outputs:
+  #    - id: pca
+  #      path: "{dataset}_pca.h5"
+  #      # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
+  #      # path: "{name}_{params.solver}_n_{params.n_components}.h5"
+  #  modules:
+  #    - id: pca-scanpy
+  #      name: "scanpy PCA"
+  #      software_environment: "scanpy"
+  #      repository:
+  #        url: https://github.com/omni-scrna/scanpy
+  #        commit: "eb37d83"
+  #        entrypoint: pca
+  #      parameters:
+  #        - solver: [arpack, randomized]
+  #          n_components: 50
+  #          random_seed: 42
+  #    - id: pca-scrapper
+  #      name: "scrapper PCA"
+  #      software_environment: "scrapper"
+  #      repository:
+  #        url: https://github.com/omni-scrna/scrapper
+  #        commit: "114a956"
+  #        entrypoint: pca
+  #      parameters:
+  #        - solver: [exact, irlba, random]
+  #          n_components: 50
+  #          random_seed: 42
 
-  - id: six-viz
-    inputs:
-      - pca
-    outputs:
-      - id: viz.components
-        path: "{dataset}_components.txt.gz"
-    modules:
-      - id: viz-r
-        name: R-based non-linear embeddings
-        software_environment: r_conda
-        repository:
-          url: /Users/mark/projects/omb/6-viz
-          commit: main
-        parameters:
-          - perplexity: 30
+  #- id: six-viz
+  #  inputs:
+  #    - pca
+  #  outputs:
+  #    - id: viz.components
+  #      path: "{dataset}_components.txt.gz"
+  #  modules:
+  #    - id: viz-r
+  #      name: R-based non-linear embeddings
+  #      software_environment: r_conda
+  #      repository:
+  #        url: /Users/mark/projects/omb/6-viz
+  #        commit: main
+  #      parameters:
+  #        - perplexity: 30
 
 #  - id: seven-integrate
 #    inputs:
