@@ -15,5 +15,7 @@ dependencies:
   - bioconductor-anndatar
   - bioconductor-scrapper
   - bioconductor-scuttle
+  - bioconductor-biocsingular
   - r-argparse
+  - r-optparse
   - r-stringr

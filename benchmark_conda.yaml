@@ -92,18 +92,17 @@ stages:
           - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
             number_selected: 2000
 
-  #- id: five-pca
-  #  resources:
-  #    cores: 4
-  #  inputs:
-  #    - normalized.h5
-  #    - selected.genes
-  #  outputs:
-  #    - id: pca
-  #      path: "{dataset}_pca.h5"
-  #      # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
-  #      # path: "{name}_{params.solver}_n_{params.n_components}.h5"
-  #  modules:
+  - id: five-pca
+    resources:
+      cores: 4
+    inputs:
+      - normalized_selected.h5
+    outputs:
+      - id: pca
+        path: "{dataset}_pca.h5"
+        # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
+        # path: "{name}_{params.solver}_n_{params.n_components}.h5"
+    modules:
   #    - id: pca-scanpy
   #      name: "scanpy PCA"
   #      software_environment: "scanpy"
@@ -115,17 +114,17 @@ stages:
   #        - solver: [arpack, randomized]
   #          n_components: 50
   #          random_seed: 42
-  #    - id: pca-scrapper
-  #      name: "scrapper PCA"
-  #      software_environment: "scrapper"
-  #      repository:
-  #        url: https://github.com/omni-scrna/scrapper
-  #        commit: "114a956"
-  #        entrypoint: pca
-  #      parameters:
-  #        - solver: [exact, irlba, random]
-  #          n_components: 50
-  #          random_seed: 42
+      - id: pca-scrapper
+        name: "scrapper PCA"
+        software_environment: "r_conda"
+        repository:
+          url: https://github.com/omni-scrna/scrapper
+          commit: "8233bcf"
+          entrypoint: pca
+        parameters:
+          - solver: [exact, irlba, random]
+            n_components: 50
+            random_seed: 42
 
   #- id: six-viz
   #  inputs:
