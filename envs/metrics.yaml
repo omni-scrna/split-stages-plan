@@ -1,0 +1,17 @@
+name: metrics
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - python >=3.12
+  - scikit-learn *
+  - h5py *
+  - numpy *
+  - polars *
+  - r-base >=4.5
+  - r-argparse *
+  - r-jsonlite *
+  - bioconductor-biocversion 3.22.*
+  - bioconductor-rhdf5 *
+  - bioconductor-poem *

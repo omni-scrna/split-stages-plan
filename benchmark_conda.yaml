@@ -13,15 +13,18 @@ software_backend: "conda"
 # Available software environments
 
 software_environments:
-    r_conda:
-        name: R conda env (some packages self built)
-        conda: envs/r.yml
-    scanpy:
-        name: scanpy multi-module
-        conda: envs/scanpy.yml
-    scrapper:
-        name: scrapper multi-module
-        conda: envs/scrapper.yml
+  r_conda:
+    name: R conda env (some packages self built)
+    conda: envs/r.yml
+  scanpy:
+    name: scanpy multi-module
+    conda: envs/scanpy.yml
+  scrapper:
+    name: scrapper multi-module
+    conda: envs/scrapper.yml
+  metrics:
+    name: metrics env
+    conda: envs/metrics.yaml
 
 stages:
   - id: one-data
@@ -127,6 +130,29 @@ stages:
             n_components: 50
             random_seed: 42
 
+  - id: six-embedding-metrics
+    inputs:
+      - pca
+      - rawdata.clusters_truth
+    outputs:
+      - id: embedding_metrics
+        path: "{dataset}_embedding_metrics.json"
+    modules:
+      - id: embedding-metrics-py
+        name: "Embedding quality metrics in python"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: main
+          entrypoint: embedding-py
+      - id: embedding-metrics-r
+        name: "Embedding quality metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: main
+          entrypoint: embedding-r
+
 #  - id: six-viz
 #    inputs:
 #        - 5-pca.pca
@@ -159,7 +185,6 @@ stages:
 #        parameters:
 #          - param1: "value"
 
-
 #  - id: eight-cluster
 #    inputs:
 #        - 5-pca.pca
@@ -180,7 +205,6 @@ stages:
 #        parameters:
 #          - param1: "value"
 
-
 #  - id: eight-annotate
 #    inputs:
 #        - 5-pca.pca
@@ -198,7 +222,6 @@ stages:
 #          commit: deadbeef
 #        parameters:
 #          - param1: "value"
-
 
 #  - id: metrics
 #    inputs:
