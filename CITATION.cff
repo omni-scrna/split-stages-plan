@@ -5,10 +5,16 @@ title: "split-stages-plan"
 authors:
   - family-names: "Robinson"
     given-names: "Mark"
+    orcid: "https://orcid.org/0000-0002-3048-5518"
     email: "mark.robinson@mls.uzh.ch"
+  - family-names: "Carrillo"
+    given-names: "Ben"
+    orcid: "https://orcid.org/0009-0003-5704-4151"
+  - family-names: Choudhury
+    given-names: Atreya
+    orcid: "https://orcid.org/0009-0003-4975-0515"
 version: "0.1.0"
-date-released: "2026-03-08"
-url: "https://github.com/CHANGE_ME/split-stages-plan"
+url: "https://github.com/omni-scrna/split-stages-plan"
 abstract: "This benchmark lays out stages for each step of an scRNA-seq pipeline"
 license: MIT
 keywords:
