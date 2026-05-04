@@ -79,15 +79,15 @@ stages:
     inputs:
       - normalized.h5
     outputs:
-      - id: selected.genes
-        path: "{dataset}_selected.txt.gz"
+      - id: normalized_selected.h5
+        path: "{dataset}_normalized_selected.h5"
     modules:
       - id: selection-r
         name: "R-based scRNA-seq gene selection methods"
         software_environment: "r_conda"
         repository:
           url: https://github.com/scrna-bench/4-select
-          commit: "6cd1817"
+          commit: "25768b0"
         parameters:
           - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
             number_selected: 2000
@@ -96,25 +96,24 @@ stages:
     resources:
       cores: 4
     inputs:
-      - normalized.h5
-      - selected.genes
+      - normalized_selected.h5
     outputs:
       - id: pca
         path: "{dataset}_pca.h5"
         # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
         # path: "{name}_{params.solver}_n_{params.n_components}.h5"
     modules:
-      - id: pca-scanpy
-        name: "scanpy PCA"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: main
-          entrypoint: pca
-        parameters:
-          - solver: [arpack, randomized]
-            n_components: 50
-            random_seed: 42
+      # - id: pca-scanpy
+      #   name: "scanpy PCA"
+      #   software_environment: "scanpy"
+      #   repository:
+      #     url: https://github.com/omni-scrna/scanpy
+      #     commit: main
+      #     entrypoint: pca
+      #   parameters:
+      #     - solver: [arpack, randomized]
+      #       n_components: 50
+      #       random_seed: 42
       - id: pca-scrapper
         name: "scrapper PCA"
         software_environment: "scrapper"
