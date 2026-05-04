@@ -103,17 +103,17 @@ stages:
         # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
         # path: "{name}_{params.solver}_n_{params.n_components}.h5"
     modules:
-      # - id: pca-scanpy
-      #   name: "scanpy PCA"
-      #   software_environment: "scanpy"
-      #   repository:
-      #     url: https://github.com/omni-scrna/scanpy
-      #     commit: main
-      #     entrypoint: pca
-      #   parameters:
-      #     - solver: [arpack, randomized]
-      #       n_components: 50
-      #       random_seed: 42
+      - id: pca-scanpy
+        name: "scanpy PCA"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: "9e99653"
+          entrypoint: pca
+        parameters:
+          - solver: [arpack, randomized]
+            n_components: 50
+            random_seed: 42
       - id: pca-scrapper
         name: "scrapper PCA"
         software_environment: "scrapper"
