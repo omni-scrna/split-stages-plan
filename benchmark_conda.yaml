@@ -22,6 +22,10 @@ software_environments:
     scrapper:
         name: scrapper multi-module
         conda: envs/scrapper.yml
+    metrics:
+        name: metrics env
+        conda: envs/metrics.yaml
+
 
 stages:
   - id: one-data
@@ -38,7 +42,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: "1556e23"
+          commit: 5629065
         parameters:
           - dataset_name: ["sc-mix"]
 
@@ -54,7 +58,7 @@ stages:
         software_environment: "r_conda"
         repository:
           url: https://github.com/scrna-bench/2-filter
-          commit: "75b7cea"
+          commit: ac74749
         parameters:
           - filter_type: ["manual", "scrapper-auto"]
 
@@ -71,7 +75,7 @@ stages:
         software_environment: "r_conda"
         repository:
           url: https://github.com/scrna-bench/3-normalize
-          commit: "1894cf3"
+          commit: b2fb9f3
         parameters:
           - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
 
@@ -87,7 +91,7 @@ stages:
         software_environment: "r_conda"
         repository:
           url: https://github.com/scrna-bench/4-select
-          commit: "25768b0"
+          commit: 25768b0
         parameters:
           - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
             number_selected: 2000
@@ -98,33 +102,56 @@ stages:
     inputs:
       - normalized_selected.h5
     outputs:
-      - id: pca
-        path: "{dataset}_pca.h5"
+      - id: pcas.tsv
+        path: "{dataset}_pcas.tsv"
         # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
         # path: "{name}_{params.solver}_n_{params.n_components}.h5"
     modules:
-      - id: pca-scanpy
-        name: "scanpy PCA"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: "9e99653"
-          entrypoint: pca
-        parameters:
-          - solver: [arpack, randomized]
-            n_components: 50
-            random_seed: 42
+      #- id: pca-scanpy
+      #  name: "scanpy PCA"
+      #  software_environment: "scanpy"
+      #  repository:
+      #    url: https://github.com/omni-scrna/scanpy
+      #    commit: "9e99653"
+      #    entrypoint: pca
+      #  parameters:
+      #    - solver: [arpack, randomized]
+      #      n_components: 50
+      #      random_seed: 42
       - id: pca-scrapper
         name: "scrapper PCA"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: main
+          commit: 975e205
           entrypoint: pca
         parameters:
           - solver: [exact, irlba, random]
             n_components: 50
             random_seed: 42
+
+  #- id: six-embedding-metrics
+  #  inputs:
+  #    - pcas
+  #    - rawdata.clusters_truth
+  #  outputs:
+  #    - id: embedding_metrics
+  #      path: "{dataset}_embedding_metrics.json"
+  #  modules:
+  #    #- id: embedding-metrics-py
+  #    #  name: "Embedding quality metrics in python"
+  #    #  software_environment: "metrics"
+  #    #  repository:
+  #    #    url: https://github.com/omni-scrna/metrics
+  #    #    commit: main
+  #    #    entrypoint: embedding-py
+  #    - id: embedding-metrics-r
+  #      name: "Embedding quality metrics in R"
+  #      software_environment: "metrics"
+  #      repository:
+  #        url: https://github.com/omni-scrna/metrics
+  #        commit: 62a5fbe
+  #        entrypoint: embedding-r
 
 #  - id: six-viz
 #    inputs:
