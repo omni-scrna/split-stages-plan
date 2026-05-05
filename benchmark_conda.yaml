@@ -119,7 +119,7 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: b5bc6d1
+          commit: bc7d28f
           entrypoint: pca
         parameters:
           - solver: [exact, irlba, random]
