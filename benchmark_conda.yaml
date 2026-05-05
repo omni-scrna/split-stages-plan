@@ -98,28 +98,28 @@ stages:
     inputs:
       - normalized_selected.h5
     outputs:
-      - id: pca
-        path: "{dataset}_pca.h5"
+      - id: pcas
+        path: "{dataset}_pcas.h5"
         # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
         # path: "{name}_{params.solver}_n_{params.n_components}.h5"
     modules:
-      - id: pca-scanpy
-        name: "scanpy PCA"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: "9e99653"
-          entrypoint: pca
-        parameters:
-          - solver: [arpack, randomized]
-            n_components: 50
-            random_seed: 42
+      #- id: pca-scanpy
+      #  name: "scanpy PCA"
+      #  software_environment: "scanpy"
+      #  repository:
+      #    url: https://github.com/omni-scrna/scanpy
+      #    commit: "9e99653"
+      #    entrypoint: pca
+      #  parameters:
+      #    - solver: [arpack, randomized]
+      #      n_components: 50
+      #      random_seed: 42
       - id: pca-scrapper
         name: "scrapper PCA"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: main
+          commit: b5bc6d1
           entrypoint: pca
         parameters:
           - solver: [exact, irlba, random]
