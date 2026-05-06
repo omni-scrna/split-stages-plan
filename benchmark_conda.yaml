@@ -31,7 +31,7 @@ stages:
         name: "R-based dataset downloads"
         software_environment: r_conda
         repository:
-          url: https://github.com/scrna-bench/datasets
+          url: https://github.com/omni-scrna/1-data.git
           commit: "c0a0612"
         parameters:
           - dataset_name: ["sc-mix"]
@@ -47,7 +47,7 @@ stages:
         name: "R-based cell-level filters"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/scrna-bench/2-filter
+          url: https://github.com/omni-scrna/2-filter.git
           commit: "75b7cea"
         parameters:
           - filter_type: ["manual", "scrapper-auto"]
@@ -64,7 +64,7 @@ stages:
         name: "R-based scRNA-seq normalization methods"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/scrna-bench/3-normalize
+          url: https://github.com/omni-scrna/3-normalize.git
           commit: "1894cf3"
         parameters:
           - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
@@ -72,6 +72,8 @@ stages:
   - id: four-select
     inputs:
       - normalized.h5
+      - rawdata.h5ad
+      - filtered.cellids
     outputs:
       - id: selected.genes
         path: "{dataset}_selected.txt.gz"
@@ -80,11 +82,12 @@ stages:
         name: "R-based scRNA-seq gene selection methods"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/scrna-bench/4-select
+          url: https://github.com/omni-scrna/4-select.git
           commit: "6cd1817"
         parameters:
-          - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
+          - selection_type: ["seurat_vst", "seurat_vst_batch", "scrapper_modelGeneVariances"]
             number_selected: 2000
+            batch_variable: ["Sample"]
 
 #  - id: five-pca
 #    inputs:
