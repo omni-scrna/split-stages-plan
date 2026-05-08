@@ -201,10 +201,10 @@ stages:
         name: R-based non-linear embeddings
         software_environment: r_conda
         repository:
-          url: /Users/mark/projects/omb/6-viz
-          commit: main
-          #url: https://github.com/omni-scrna/6-viz
-          #commit: 8a1a965
+          url: https://github.com/omni-scrna/6-viz
+          commit: a6ea53b
+          #url: /Users/mark/projects/omb/6-viz
+          #commit: main
         parameters:
           - flavour: ["scrapper_UMAP"]
 
