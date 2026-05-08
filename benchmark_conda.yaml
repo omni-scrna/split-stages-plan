@@ -141,14 +141,14 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 32d08e5
+          commit: 0d0050e
           entrypoint: embedding-py
       - id: embedding-metrics-r
         name: "Embedding quality metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 32d08e5
+          commit: 0d0050e
           entrypoint: embedding-r
 
   - id: graph
@@ -185,7 +185,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 63c6d78
+          commit: 0d0050e
           entrypoint: graph-r
 
   - id: cluster
@@ -205,6 +205,22 @@ stages:
         parameters:
           - resolution: [0.5, 1.0]
             random_seed: 42
+
+  - id: cluster-metrics
+    inputs:
+      - clusters.tsv
+      - rawdata.clusters_truth
+    outputs:
+      - id: cluster_metrics
+        path: "{dataset}_cluster_metrics.json"
+    modules:
+      - id: cluster-metrics-r
+        name: "Partition metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: 0d0050e
+          entrypoint: cluster-r
 
 #  - id: six-viz
 #    inputs:
