@@ -188,21 +188,23 @@ stages:
           commit: 63c6d78
           entrypoint: graph-r
 
-#  - id: six-viz
-#    inputs:
-#        - 5-pca.pca
-#    outputs:
-#      - id: 6-viz.components
-#        path: "{dataset}_components.txt.gz"
-#    modules:
-#      - id: cool_method_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
+  - id: two-dim-viz
+    inputs:
+      - pca.tsv
+      - rawdata.h5ad
+      - filtered.cellids
+    outputs:
+      - id: viz.tsv
+        path: "{dataset}_2dviz.tsv"
+    modules:
+      - id: viz-r
+        name: R-based non-linear embeddings
+        software_environment: r_conda
+        repository:
+          url: https://github.com/omni-scrna/6-viz
+          commit: main
+        parameters:
+          - perplexity: 30
 
 #  - id: seven-integrate
 #    inputs:
