@@ -151,6 +151,43 @@ stages:
           commit: 32d08e5
           entrypoint: embedding-r
 
+  - id: graph
+    inputs:
+      - pcas.tsv
+    outputs:
+      - id: distances.h5
+        path: "{dataset}_distances.h5"
+      - id: connectivities.h5
+        path: "{dataset}_connectivities.h5"
+    modules:
+      - id: graph-scanpy
+        name: "scanpy KNN graph"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: 7e22ba9
+          entrypoint: knn
+        parameters:
+          - n_neighbors: 15
+            random_seed: 42
+            flavor: "umap"
+
+  - id: graph-metrics
+    inputs:
+      - distances.h5
+      - rawdata.clusters_truth
+    outputs:
+      - id: graph_metrics
+        path: "{dataset}_graph_metrics.json"
+    modules:
+      - id: graph-metrics-r
+        name: "Graph quality metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: 63c6d78
+          entrypoint: graph-r
+
 #  - id: six-viz
 #    inputs:
 #        - 5-pca.pca
