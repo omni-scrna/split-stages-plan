@@ -110,7 +110,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 98ffe7c
+          commit: 5a570e0
           entrypoint: pca
         parameters:
           - solver: [arpack, randomized]
@@ -165,7 +165,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 7e22ba9
+          commit: 5a570e0
           entrypoint: knn
         parameters:
           - n_neighbors: 15
@@ -187,6 +187,24 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: 63c6d78
           entrypoint: graph-r
+
+  - id: cluster
+    inputs:
+      - connectivities.h5
+    outputs:
+      - id: clusters.tsv
+        path: "{dataset}_clusters.tsv"
+    modules:
+      - id: cluster-scanpy
+        name: "scanpy Leiden clustering"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: 5a570e0
+          entrypoint: cluster
+        parameters:
+          - resolution: [0.5, 1.0]
+            random_seed: 42
 
 #  - id: six-viz
 #    inputs:
