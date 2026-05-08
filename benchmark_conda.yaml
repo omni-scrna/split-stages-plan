@@ -190,21 +190,23 @@ stages:
 
   - id: two-dim-viz
     inputs:
-      - pca.tsv
+      - pcas.tsv
       - rawdata.h5ad
       - filtered.cellids
     outputs:
       - id: viz.tsv
-        path: "{dataset}_2dviz.tsv"
+        path: "{dataset}_lowdviz.tsv"
     modules:
       - id: viz-r
         name: R-based non-linear embeddings
         software_environment: r_conda
         repository:
-          url: https://github.com/omni-scrna/6-viz
+          url: /Users/mark/projects/omb/6-viz
           commit: main
+          #url: https://github.com/omni-scrna/6-viz
+          #commit: 8a1a965
         parameters:
-          - perplexity: 30
+          - flavour: ["scrapper_UMAP"]
 
 #  - id: seven-integrate
 #    inputs:
