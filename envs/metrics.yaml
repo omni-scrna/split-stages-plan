@@ -1,0 +1,21 @@
+name: metrics
+channels:
+  - https://repo.prefix.dev/almost-conductor
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - python >=3.12
+  - scikit-learn *
+  - h5py *
+  - numpy *
+  - polars *
+  - r-base >=4.5,<4.6.0
+  - r-argparse *
+  - r-jsonlite *
+  - bioconductor-biocversion 3.22.*
+  - bioconductor-hdf5array *
+  - bioconductor-poem *
+  - r-pdist=1.2.1
+  - r-aricode=1.0.3 
+  - r-data.table *

@@ -4,18 +4,26 @@ description: This benchmark lays out stages for each step of an scRNA-seq pipeli
 benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
 
 # Benchmark configuration
-version: "0.0.2"
+version: "0.0.3"
 
 # The default software environment for this benchmark.
 # One of: apptainer, conda, envmodules.
 software_backend: "conda"
 
 # Available software environments
-
 software_environments:
-    r_conda:
-        name: R conda env (some packages self built)
-        conda: envs/r.yml
+  r_conda:
+    name: R conda env (some packages self built)
+    conda: envs/r.yml
+  scanpy:
+    name: scanpy multi-module
+    conda: envs/scanpy.yml
+  scrapper:
+    name: scrapper multi-module
+    conda: envs/scrapper.yml
+  metrics:
+    name: metrics env
+    conda: envs/metrics.yaml
 
 stages:
   - id: one-data
@@ -31,8 +39,8 @@ stages:
         name: "R-based dataset downloads"
         software_environment: r_conda
         repository:
-          url: https://github.com/omni-scrna/1-data.git
-          commit: "c0a0612"
+          url: https://github.com/omni-scrna/1-data
+          commit: 5629065
         parameters:
           - dataset_name: ["sc-mix"]
 
@@ -47,8 +55,8 @@ stages:
         name: "R-based cell-level filters"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/omni-scrna/2-filter.git
-          commit: "75b7cea"
+          url: https://github.com/scrna-bench/2-filter
+          commit: ac74749
         parameters:
           - filter_type: ["manual", "scrapper-auto"]
 
@@ -64,8 +72,8 @@ stages:
         name: "R-based scRNA-seq normalization methods"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/omni-scrna/3-normalize.git
-          commit: "1894cf3"
+          url: https://github.com/scrna-bench/3-normalize
+          commit: b2fb9f3
         parameters:
           - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
 
@@ -75,36 +83,85 @@ stages:
       - rawdata.h5ad
       - filtered.cellids
     outputs:
-      - id: selected.genes
-        path: "{dataset}_selected.txt.gz"
+      - id: normalized_selected.h5
+        path: "{dataset}_normalized_selected.h5"
     modules:
       - id: selection-r
         name: "R-based scRNA-seq gene selection methods"
         software_environment: "r_conda"
         repository:
-          url: https://github.com/omni-scrna/4-select.git
-          commit: "6cd1817"
+          url: https://github.com/omni-scrna/4-select
+          commit: 27cb278
         parameters:
-          - selection_type: ["seurat_vst", "seurat_vst_batch", "scrapper_modelGeneVariances"]
+          - selection_type: ["seurat_vst", "seurat_vst_batch"]
             number_selected: 2000
             batch_variable: ["Sample"]
+      - id: selection-scrapper
+        name: "Scrapper-based gene selection"
+        software_environment: "scrapper"
+        repository:
+          url: https://github.com/omni-scrna/scrapper
+          commit: 4c7b69e
+          entrypoint: select
+        parameters:
+          - number_selected: 2000
 
-#  - id: five-pca
-#    inputs:
-#        - 3-normalize.normalized
-#        - 4-select.selected
-#    outputs:
-#      - id: 5-pca.pca
-#        path: "{dataset}_pca.txt.gz"
-#    modules:
-#      - id: whizbang_pca_method_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
+  - id: five-pca
+    resources:
+      cores: 4
+    inputs:
+      - normalized_selected.h5
+    outputs:
+      - id: pcas.tsv
+        path: "{dataset}_pcas.tsv"
+        # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
+        # path: "{name}_{params.solver}_n_{params.n_components}.h5"
+    modules:
+      - id: pca-scanpy
+        name: "scanpy PCA"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: 98ffe7c
+          entrypoint: pca
+        parameters:
+          - solver: [arpack, randomized]
+            n_components: 50
+            random_seed: 42
+      - id: pca-scrapper
+        name: "scrapper PCA"
+        software_environment: "scrapper"
+        repository:
+          url: https://github.com/omni-scrna/scrapper
+          commit: 5c93b1e
+          entrypoint: pca
+        parameters:
+          - solver: [exact, irlba, random]
+            n_components: 50
+            random_seed: 42
+
+  - id: six-embedding-metrics
+    inputs:
+      - pcas.tsv
+      - rawdata.clusters_truth
+    outputs:
+      - id: embedding_metrics
+        path: "{dataset}_embedding_metrics.json"
+    modules:
+      - id: embedding-metrics-py
+        name: "Embedding quality metrics in python"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: 32d08e5
+          entrypoint: embedding-py
+      - id: embedding-metrics-r
+        name: "Embedding quality metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: 32d08e5
+          entrypoint: embedding-r
 
 #  - id: six-viz
 #    inputs:
@@ -138,7 +195,6 @@ stages:
 #        parameters:
 #          - param1: "value"
 
-
 #  - id: eight-cluster
 #    inputs:
 #        - 5-pca.pca
@@ -159,7 +215,6 @@ stages:
 #        parameters:
 #          - param1: "value"
 
-
 #  - id: eight-annotate
 #    inputs:
 #        - 5-pca.pca
@@ -177,7 +232,6 @@ stages:
 #          commit: deadbeef
 #        parameters:
 #          - param1: "value"
-
 
 #  - id: metrics
 #    inputs:

@@ -1,0 +1,16 @@
+name: scrapper
+channels:
+- https://prefix.dev/almost-conductor
+- conda-forge
+- bioconda
+- nodefaults
+dependencies:
+- r-base >=4.5
+- bioconductor-scrapper *
+- bioconductor-biocsingular *
+- bioconductor-rhdf5 *
+- bioconductor-delayedarray *
+- bioconductor-hdf5array *
+- r-matrix *
+- r-optparse *
+- r-data.table *
