@@ -110,7 +110,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 5a570e0
+          commit: graphs
           entrypoint: pca
         parameters:
           - solver: [arpack, randomized]
@@ -155,42 +155,41 @@ stages:
     inputs:
       - pcas.tsv
     outputs:
-      - id: distances.h5
-        path: "{dataset}_distances.h5"
-      - id: connectivities.h5
-        path: "{dataset}_connectivities.h5"
+      - id: neighbors.h5
+        path: "{dataset}_neighbors.h5"
     modules:
       - id: graph-scanpy
         name: "scanpy KNN graph"
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 5a570e0
+          commit: graphs
           entrypoint: knn
         parameters:
           - n_neighbors: 15
             random_seed: 42
             flavor: "umap"
 
-  - id: graph-metrics
-    inputs:
-      - distances.h5
-      - rawdata.clusters_truth
-    outputs:
-      - id: graph_metrics
-        path: "{dataset}_graph_metrics.json"
-    modules:
-      - id: graph-metrics-r
-        name: "Graph quality metrics in R"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e
-          entrypoint: graph-r
+  # TODO: re-enable once metrics R module reads the bundled neighbors.h5
+  # - id: graph-metrics
+  #   inputs:
+  #     - distances.h5
+  #     - rawdata.clusters_truth
+  #   outputs:
+  #     - id: graph_metrics
+  #       path: "{dataset}_graph_metrics.json"
+  #   modules:
+  #     - id: graph-metrics-r
+  #       name: "Graph quality metrics in R"
+  #       software_environment: "metrics"
+  #       repository:
+  #         url: https://github.com/omni-scrna/metrics
+  #         commit: 0d0050e
+  #         entrypoint: graph-r
 
   - id: cluster
     inputs:
-      - connectivities.h5
+      - neighbors.h5
     outputs:
       - id: clusters.tsv
         path: "{dataset}_clusters.tsv"
@@ -200,7 +199,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 5a570e0
+          commit: graphs
           entrypoint: cluster
         parameters:
           - resolution: [0.5, 1.0]
