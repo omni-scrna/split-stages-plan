@@ -109,7 +109,7 @@ stages:
         software_environment: "r_conda"
         repository:
           url: https://github.com/scrna-bench/4-select
-          commit: 25768b0
+          commit: 682083b
         parameters:
           - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
             number_selected: 2000
