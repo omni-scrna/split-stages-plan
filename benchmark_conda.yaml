@@ -25,8 +25,11 @@ software_environments:
     name: metrics env
     conda: envs/metrics.yaml
   py_conda:
-    name: Python conda env 
+    name: Python conda env
     conda: envs/py.yml
+  integrate:
+    name: integration env
+    conda: envs/integrate.yml
 
 stages:
   - id: one-data
@@ -249,6 +252,25 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: 0d0050e
           entrypoint: cluster-r
+
+  - id: seven-integrate
+    inputs:
+      - pcas.tsv
+      - rawdata.h5ad
+    outputs:
+      - id: corrected.tsv
+        path: "{dataset}_corrected.tsv"
+    modules:
+      - id: integration-harmony
+        name: "Harmony batch correction"
+        software_environment: "integrate"
+        repository:
+          url: https://github.com/omni-scrna/7-integrate
+          commit: b4c0b02
+          entrypoint: harmony-r
+        parameters:
+          - batch_variable: ["cell_line"]
+            theta: [1, 2]
 
 #  - id: six-viz
 #    inputs:
