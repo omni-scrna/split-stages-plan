@@ -8,7 +8,7 @@ authors:
     email: "mark.robinson@mls.uzh.ch"
 version: "0.1.0"
 date-released: "2026-03-08"
-url: "https://github.com/CHANGE_ME/split-stages-plan"
+url: "https://github.com/omni-scrna/split-stages-plan"
 abstract: "This benchmark lays out stages for each step of an scRNA-seq pipeline"
 license: MIT
 keywords:

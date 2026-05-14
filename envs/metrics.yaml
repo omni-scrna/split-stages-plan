@@ -13,8 +13,12 @@ dependencies:
   - r-base >=4.5,<4.6.0
   - r-argparse *
   - r-jsonlite *
+  - r-data.table *
+  - r-igraph *
+  - r-matrix *
   - bioconductor-biocversion 3.22.*
   - bioconductor-hdf5array *
+  - bioconductor-rhdf5 *
   - bioconductor-poem *
   - r-pdist=1.2.1
   - r-aricode=1.0.3 
