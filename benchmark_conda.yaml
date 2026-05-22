@@ -21,6 +21,9 @@ software_environments:
   scrapper:
     name: scrapper multi-module
     conda: envs/scrapper.yml
+  seurat:
+    name: seurat multi-module
+    conda: envs/seurat.yml
   metrics:
     name: metrics env
     conda: envs/metrics.yaml
@@ -43,7 +46,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 5629065
+          commit: 10112c9
         parameters:
           - dataset_name: ["sc-mix"]
 
@@ -100,28 +103,41 @@ stages:
     inputs:
       - rawdata.h5ad
       - normalized.h5
+      - filtered.cellids
     outputs:
       - id: normalized_selected.h5
         path: "{dataset}_normalized_selected.h5"
     modules:
-      - id: selection-r
-        name: "R-based scRNA-seq gene selection methods"
-        software_environment: "r_conda"
+      - id: selection-seurat
+        name: "Seurat-based scRNA-seq gene selection methods"
+        software_environment: "seurat"
         repository:
-          url: https://github.com/scrna-bench/4-select
-          commit: 682083b
+          url: https://github.com/omni-scrna/seurat
+          commit: 4c9ce1d
+          entrypoint: select
         parameters:
-          - selection_type: ["seurat_vst", "scrapper_modelGeneVariances"]
+          - selection_type: ["seurat_vst", "seurat_vst_batch"]
             number_selected: 2000
-      - id: selection-py
-        name: "Python-based scRNA-seq gene selection methods"
-        software_environment: "py_conda"
+            batch_variable: ["cell_line"] # this can only be used for sc-mix and it doesn't make sense
+      - id: selection-scrapper
+        name: "Scrapper-based gene selection"
+        software_environment: "scrapper"
         repository:
-          url: https://github.com/omni-scrna/4-select-py
-          commit: "19e5811"
+          url: https://github.com/omni-scrna/scrapper
+          commit: 11abd40
+          entrypoint: select
         parameters:
-          - selection_type: ["scanpy_hvg", "pearson_residuals"]
-            number_selected: 2000     
+          - number_selected: 2000
+      # - id: selection-py
+      #   name: "Python-based scRNA-seq gene selection methods"
+      #   software_environment: "py_conda"
+      #   repository:
+      #     url: https://github.com/omni-scrna/4-select-py
+      #     commit: "19e5811"
+      #   parameters:
+      #     - selection_type: ["scanpy_hvg", "pearson_residuals"]
+      #       number_selected: 2000     
+
 
   - id: five-pca
     resources:
