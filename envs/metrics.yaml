@@ -1,8 +1,8 @@
 name: metrics
 channels:
-  - https://repo.prefix.dev/almost-conductor
   - conda-forge
   - bioconda
+  - https://repo.prefix.dev/almost-conductor
   - nodefaults
 dependencies:
   - python >=3.12
