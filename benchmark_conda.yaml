@@ -24,6 +24,9 @@ software_environments:
   seurat:
     name: seurat multi-module
     conda: envs/seurat.yml
+  seurat-bpcells:
+    name: seurat BPCells variant (r-base 4.4, no anndatar)
+    conda: envs/seurat-bpcells.yml
   metrics:
     name: metrics env
     conda: envs/metrics.yaml
@@ -33,6 +36,9 @@ software_environments:
   integrate:
     name: integration env
     conda: envs/integrate.yml
+  rapids-singlecell:
+    name: rapids-singlecell multi-module
+    conda: envs/rapids-singlecell.yml
 
 stages:
   - id: one-data
@@ -60,14 +66,6 @@ stages:
       - id: filtered.cellids
         path: "{dataset}_cellids.txt.gz"
     modules:
-      - id: filtering-r
-        name: "R-based cell-level filters"
-        software_environment: "r_conda"
-        repository:
-          url: https://github.com/scrna-bench/2-filter
-          commit: ac74749
-        parameters:
-          - filter_type: ["manual", "scrapper-auto"]
       - id: filtering-py
         name: "Python-based cell-level filters"
         software_environment: "py_conda"
@@ -85,14 +83,6 @@ stages:
       - id: normalized.h5
         path: "{dataset}_normalized.h5"
     modules:
-      - id: normalization-r
-        name: "R-based scRNA-seq normalization methods"
-        software_environment: "r_conda"
-        repository:
-          url: https://github.com/scrna-bench/3-normalize
-          commit: b2fb9f3
-        parameters:
-          - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
       - id: normalization-py
         name: "Python-based scRNA-seq normalization methods"
         software_environment: "py_conda"
@@ -111,17 +101,6 @@ stages:
       - id: normalized_selected.h5
         path: "{dataset}_normalized_selected.h5"
     modules:
-      - id: selection-seurat
-        name: "Seurat-based scRNA-seq gene selection methods"
-        software_environment: "seurat"
-        repository:
-          url: https://github.com/omni-scrna/seurat
-          commit: 4c9ce1d
-          entrypoint: select
-        parameters:
-          - selection_type: ["seurat_vst", "seurat_vst_batch"]
-            number_selected: 2000
-            batch_variable: ["cell_line"] # this can only be used for sc-mix and it doesn't make sense
       - id: selection-scrapper
         name: "Scrapper-based gene selection"
         software_environment: "scrapper"
@@ -130,17 +109,22 @@ stages:
           commit: 11abd40
           entrypoint: select
         parameters:
-          - number_selected: 2000
-      # - id: selection-py
-      #   name: "Python-based scRNA-seq gene selection methods"
-      #   software_environment: "py_conda"
-      #   repository:
-      #     url: https://github.com/omni-scrna/4-select-py
-      #     commit: "19e5811"
-      #   parameters:
-      #     - selection_type: ["scanpy_hvg", "pearson_residuals"]
-      #       number_selected: 2000     
+          - number_selected: 5000
 
+  - id: five-pre-bpcells
+    inputs:
+      - normalized_selected.h5
+    outputs:
+      - id: bpcells.tar.gz
+        path: "{dataset}_bpcells.tar.gz"
+    modules:
+      - id: pre-bpcells-seurat
+        name: "BPCells format conversion (Seurat)"
+        software_environment: "seurat-bpcells"
+        repository:
+          url: ../split-stages-plan-modules/seurat
+          commit: center-only
+          entrypoint: bpcells-convert
 
   - id: five-pca
     resources:
@@ -153,17 +137,10 @@ stages:
         # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
         # path: "{name}_{params.solver}_n_{params.n_components}.h5"
     modules:
-      - id: pca-scanpy
-        name: "scanpy PCA"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: graphs
-          entrypoint: pca
-        parameters:
-          - solver: [arpack, randomized]
-            n_components: 50
-            random_seed: 42
+      # Seed sweep is applied only to explicitly randomized/approximate solvers.
+      # Deterministic / fully-convergent solvers (exact SVD, IRLBA, ARPACK,
+      # IncrementalPCA) keep random_seed: 42 — their seed-independence will be
+      # validated in a separate "correctness" run.
       - id: pca-scrapper
         name: "scrapper PCA"
         software_environment: "scrapper"
@@ -172,9 +149,118 @@ stages:
           commit: 5c93b1e
           entrypoint: pca
         parameters:
-          - solver: [exact, irlba, random]
+          - solver: [exact, irlba]
             n_components: 50
             random_seed: 42
+          - solver: [random]
+            n_components: 50
+            random_seed: &pca_seeds [42, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      - id: pca-scanpy
+        name: "scanpy PCA"
+        software_environment: "scanpy"
+        repository:
+          url: ../split-stages-plan-modules/scanpy
+          commit: center-only
+          entrypoint: pca
+        parameters:
+          - solver: [arpack]
+            n_components: 50
+            random_seed: 42
+            chunked: "false"
+          - solver: [randomized]
+            n_components: 50
+            random_seed: *pca_seeds
+            chunked: "false"
+          - n_components: 50
+            random_seed: 42
+            chunked: "true"
+            chunk_size: 10000
+      - id: pca-seurat
+        name: "seurat PCA"
+        software_environment: "seurat"
+        repository:
+          url: ../split-stages-plan-modules/seurat
+          commit: center-only
+          entrypoint: pca
+        parameters:
+          - solver: [exact]
+            n_components: 50
+            random_seed: 42
+          - solver: [approximate]
+            n_components: 50
+            random_seed: *pca_seeds
+      # GPU serialization required for pca-rapids
+      # ----------------------------------------
+      # rapids-singlecell reinitializes RMM with a non-pooled, non-managed
+      # allocator (see split-stages-plan-modules/rapids-singlecell/src/gpu.py)
+      # so VRAM accounting reflects the true working set rather than a hidden
+      # pool. Side effect: concurrent rapids jobs OOM each other on a single
+      # GPU because there's nothing to reclaim from.
+      #
+      # The `resources: gpu: 1` declaration below emits
+      # `resources: nvidia_gpu=1` on the snakemake rule, but Snakemake only
+      # enforces it if you ALSO pass a global cap. Run with:
+      #
+      #     ob run benchmark_conda.yaml -- --resources nvidia_gpu=1
+      #
+      # Without that flag, snakemake treats nvidia_gpu as unbounded and
+      # schedules rapids jobs in parallel — they will OOM as before.
+      - id: pca-rapids
+        name: "rapids-singlecell PCA"
+        software_environment: "rapids-singlecell"
+        resources:
+          gpu: 1
+        repository:
+          url: ../split-stages-plan-modules/rapids-singlecell
+          commit: center-only
+          #  entrypoint: pca
+          entrypoint: pca-prof
+        parameters:
+          # rapids -> cuML default (auto). For our sparse zero-centered input
+          # rsc routes to covariance_eigh -> deterministic. Seed is a no-op,
+          # so pinned to 42 (no sweep).
+          - solver: [rapids]
+            n_components: 50
+            random_seed: 42
+          # rapids-exact -> svd_solver="full" on GPU; deterministic, seed is
+          # a no-op (kept at 42, no sweep). Lets us compare a GPU exact SVD
+          # against scrapper/seurat exact at the solver level.
+          - solver: [rapids-exact]
+            n_components: 50
+            random_seed: 42
+          # rapids-randomized -> svd_solver="randomized" on GPU; genuinely
+          # seed-dependent (power iteration + Gaussian sketch). Parallels
+          # scanpy/randomized and scrapper/random.
+          - solver: [rapids-randomized]
+            n_components: 50
+            random_seed: *pca_seeds
+
+  # Parallel PCA branch consuming the BPCells-converted matrix produced by
+  # five-pre-bpcells. Output id `pcas.tsv` matches five-pca's so downstream
+  # six-embedding-metrics fans out naturally over both branches.
+  - id: five-pca-bpcells
+    resources:
+      cores: 4
+    inputs:
+      - bpcells.tar.gz
+    outputs:
+      - id: pcas.tsv
+        path: "{dataset}_pcas.tsv"
+    modules:
+      - id: pca-seurat-bpcells
+        name: "seurat PCA (BPCells-backed)"
+        software_environment: "seurat-bpcells"
+        repository:
+          url: ../split-stages-plan-modules/seurat
+          commit: center-only
+          entrypoint: pca
+        parameters:
+          - solver: [bpcells-exact]
+            n_components: 50
+            random_seed: 42
+          - solver: [bpcells-approximate]
+            n_components: 50
+            random_seed: *pca_seeds
 
   - id: six-embedding-metrics
     inputs:
@@ -191,191 +277,11 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: 0d0050e
           entrypoint: embedding-py
-      - id: embedding-metrics-r
-        name: "Embedding quality metrics in R"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e
-          entrypoint: embedding-r
+      #       - id: embedding-metrics-r
+      #         name: "Embedding quality metrics in R"
+      #         software_environment: "metrics"
+      #         repository:
+      #           url: https://github.com/omni-scrna/metrics
+      #           commit: 0d0050e
+      #           entrypoint: embedding-r
 
-  - id: graph
-    inputs:
-      - pcas.tsv
-    outputs:
-      - id: neighbors.h5
-        path: "{dataset}_neighbors.h5"
-    modules:
-      - id: graph-scanpy
-        name: "scanpy KNN graph"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: graphs
-          entrypoint: knn
-        parameters:
-          - n_neighbors: 15
-            random_seed: 42
-            flavor: "umap"
-
-  # TODO: re-enable once metrics R module reads the bundled neighbors.h5
-  # - id: graph-metrics
-  #   inputs:
-  #     - distances.h5
-  #     - rawdata.clusters_truth
-  #   outputs:
-  #     - id: graph_metrics
-  #       path: "{dataset}_graph_metrics.json"
-  #   modules:
-  #     - id: graph-metrics-r
-  #       name: "Graph quality metrics in R"
-  #       software_environment: "metrics"
-  #       repository:
-  #         url: https://github.com/omni-scrna/metrics
-  #         commit: 0d0050e
-  #         entrypoint: graph-r
-
-  - id: cluster
-    inputs:
-      - neighbors.h5
-    outputs:
-      - id: clusters.tsv
-        path: "{dataset}_clusters.tsv"
-    modules:
-      - id: cluster-scanpy
-        name: "scanpy Leiden clustering"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: graphs
-          entrypoint: cluster
-        parameters:
-          - resolution: [0.5, 1.0]
-            random_seed: 42
-
-  - id: cluster-metrics
-    inputs:
-      - clusters.tsv
-      - rawdata.clusters_truth
-    outputs:
-      - id: cluster_metrics
-        path: "{dataset}_cluster_metrics.json"
-    modules:
-      - id: cluster-metrics-r
-        name: "Partition metrics in R"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e
-          entrypoint: cluster-r
-
-  - id: seven-integrate
-    inputs:
-      - pcas.tsv
-      - rawdata.h5ad
-    outputs:
-      - id: corrected.tsv
-        path: "{dataset}_corrected.tsv"
-    modules:
-      - id: integration-harmony
-        name: "Harmony batch correction"
-        software_environment: "integrate"
-        repository:
-          url: https://github.com/omni-scrna/7-integrate
-          commit: b4c0b02
-          entrypoint: harmony-r
-        parameters:
-          - batch_variable: ["Sample"]
-            theta: [0.1, 0.2]
-
-#  - id: six-viz
-#    inputs:
-#        - 5-pca.pca
-#    outputs:
-#      - id: 6-viz.components
-#        path: "{dataset}_components.txt.gz"
-#    modules:
-#      - id: cool_method_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
-
-#  - id: seven-integrate
-#    inputs:
-#        - 5-pca.pca
-#    outputs:
-#      - id: 7-integrate.integrated
-#        path: "{dataset}_integrated.txt.gz"
-#    modules:
-#      - id: integration_method_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
-
-#  - id: eight-cluster
-#    inputs:
-#        - 5-pca.pca
-#        - 3-normalize.normalized
-#        - 7-integrate.integrated
-#    outputs:
-#      - id: 8a-cluster.graph
-#        path: "{dataset}_graph.txt.gz"
-#      - id: 8a-cluster.clusters
-#        path: "{dataset}_clusters.txt.gz"
-#    modules:
-#      - id: whizbang_clustering_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
-
-#  - id: eight-annotate
-#    inputs:
-#        - 5-pca.pca
-#        - 3-normalize.normalized
-#        - 7-integrate.integrated
-#    outputs:
-#      - id: 8b-annotate.annotations
-#        path: "{dataset}_annotations.txt.gz"
-#    modules:
-#      - id: whizbang_prediction_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
-
-#  - id: metrics
-#    inputs:
-#        - 5-pca.pca
-#        - 3-normalize.normalized
-#        - 6-viz.components
-#        - 7-integrate.integrated
-#        - 8a-cluster.clusters
-#        - 8a-cluster.graph
-#        - 8b-annotate.annotations
-#    outputs:
-#      - id: metrics.scores
-#        path: "{dataset}.scores.gz"
-#    modules:
-#      - id: strict_metric_1
-#        name: "a very well defined metric"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/the_right_metric
-#          commit: c0ffee
-#        parameters:
-#          - foo: "bar"
