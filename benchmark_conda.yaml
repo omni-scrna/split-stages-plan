@@ -33,6 +33,9 @@ software_environments:
   integrate:
     name: integration env
     conda: envs/integrate.yml
+  annotate:
+    name: annotate env
+    conda: envs/annotate.yml
 
 stages:
   - id: one-data
