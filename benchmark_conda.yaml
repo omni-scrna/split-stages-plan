@@ -48,6 +48,27 @@ stages:
           url: https://github.com/omni-scrna/1-data
           commit: 5629065
         parameters:
+          - dataset_name: ["sc-mix"]
+
+  - id: one-data-integration
+    outputs:
+      - id: rawdata.h5ad
+        path: "{dataset}.h5ad"
+      - id: rawdata.clusters_truth
+        path: "{dataset}.clusters_truth.tsv"
+      - id: rawdata.clusters_truth_num
+        path: "{dataset}.clusters_truth_num.txt"
+      - id: batch.info
+        path: "{dataset}_batch_info.yaml"
+    modules:
+      - id: datasets-integration
+        name: "R-based dataset downloads for integration"
+        software_environment: r_conda
+        repository:
+          url: /home/jiayiwang/omni-scrna/1-data
+          commit: 601b880
+          entrypoint: integration
+        parameters:
           - dataset_name: ["be1"]
 
   - id: two-filter
@@ -257,6 +278,7 @@ stages:
     inputs:
       - pcas.tsv
       - rawdata.h5ad
+      - batch.info
     outputs:
       - id: corrected.tsv
         path: "{dataset}_corrected.tsv"
@@ -265,12 +287,11 @@ stages:
         name: "Harmony batch correction"
         software_environment: "integrate"
         repository:
-          url: https://github.com/omni-scrna/7-integrate
-          commit: b4c0b02
+          url: /home/jiayiwang/omni-scrna/7-integrate
+          commit: 00f292d
           entrypoint: harmony-r
         parameters:
-          - batch_variable: ["Sample"]
-            theta: [0.1, 0.2]
+          - theta: [0.1, 0.2]
 
 #  - id: six-viz
 #    inputs:

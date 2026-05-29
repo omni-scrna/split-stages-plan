@@ -17,3 +17,4 @@ dependencies:
   - bioconductor-scuttle
   - r-argparse
   - r-stringr
+  - r-yaml
