@@ -52,6 +52,28 @@ stages:
           commit: 10112c9
         parameters:
           - dataset_name: ["be1"]
+            batching: true  
+            batch_variable: "cell_line"
+
+  - id: one-data-for-integration
+    outputs:
+     - id: rawdata.h5ad
+        path: "{dataset}.h5ad"
+      - id: rawdata.clusters_truth
+        path: "{dataset}.clusters_truth.tsv"
+      - id: rawdata.clusters_truth_num
+        path: "{dataset}.clusters_truth_num.txt"
+      - id: batch_info.yaml
+        path: "{dataset}_batch_info.yaml"
+    modules:
+      - id: data-for-integration
+        name: "Batch variable identification"
+        software_environment: r_conda
+        repository:
+          url: https://github.com/omni-scrna/one-data-for-integration
+          commit: TBD
+        parameters:
+          - dataset_name: ["be1"]
 
   - id: two-filter
     inputs:
@@ -139,8 +161,28 @@ stages:
       #     commit: "19e5811"
       #   parameters:
       #     - selection_type: ["scanpy_hvg", "pearson_residuals"]
-      #       number_selected: 2000     
+      #       number_selected: 2000
 
+  - id: four-select-per-batch
+    inputs:
+      - rawdata.h5ad
+      - normalized.h5
+      - filtered.cellids
+      - batch_info.yaml
+    outputs:
+      - id: normalized_selected.h5
+        path: "{dataset}_normalized_selected.h5"
+    modules:
+      - id: selection-seurat-per-batch
+        name: "Seurat per-batch VST selection"
+        software_environment: "seurat"
+        repository:
+          url: https://github.com/omni-scrna/seurat
+          commit: TBD
+          entrypoint: select
+        parameters:
+          - selection_type: ["seurat_vst_batch"]
+            number_selected: 2000
 
   - id: five-pca
     resources:
@@ -175,6 +217,44 @@ stages:
           - solver: [exact, irlba, random]
             n_components: 50
             random_seed: 42
+
+  - id: five-pca-per-batch
+    resources:
+      cores: 4
+    inputs:
+      - normalized_selected.h5
+      - rawdata.h5ad
+      - batch_info.yaml
+    outputs:
+      - id: pcas_per_batch.tsv
+        path: "{dataset}_pcas_per_batch.tsv"
+      - id: loadings_per_batch.h5
+        path: "{dataset}_loadings_per_batch.h5"
+    modules:
+      - id: pca-per-batch-scrapper
+        name: "scrapper PCA per batch"
+        software_environment: scrapper
+        repository:
+          url: https://github.com/omni-scrna/scrapper
+          commit: TBD
+          entrypoint: pca
+        parameters:
+          - solver: [irlba]
+            n_components: 50
+            random_seed: 42
+            per_batch: true
+      - id: pca-per-batch-scanpy
+        name: "scanpy PCA per batch"
+        software_environment: scanpy
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: TBD
+          entrypoint: pca
+        parameters:
+          - solver: [arpack, randomized]
+            n_components: 50
+            random_seed: 42
+            per_batch: true
 
   - id: six-embedding-metrics
     inputs:
@@ -273,6 +353,10 @@ stages:
     inputs:
       - pcas.tsv
       - rawdata.h5ad
+      - batch_info.yaml
+      - pcas_per_batch.tsv
+      - loadings_per_batch.h5
+      - normalized_selected.h5
     outputs:
       - id: corrected.tsv
         path: "{dataset}_corrected.tsv"
@@ -282,11 +366,20 @@ stages:
         software_environment: "integrate"
         repository:
           url: https://github.com/omni-scrna/7-integrate
-          commit: b4c0b02
+          commit: TBD
           entrypoint: harmony-r
         parameters:
-          - batch_variable: ["Sample"]
-            theta: [0.1, 0.2]
+          - theta: [0.1, 0.2]
+      - id: integration-seurat-rpca
+        name: "Seurat RPCA batch correction"
+        software_environment: "seurat"
+        repository:
+          url: https://github.com/omni-scrna/seurat
+          commit: TBD
+          entrypoint: rpca
+        parameters:
+          - dims: [30]
+            k_anchor: [5]
 
 #  - id: six-viz
 #    inputs:
