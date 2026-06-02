@@ -259,6 +259,17 @@ stages:
         parameters:
           - resolution: [0.5, 1.0]
             random_seed: 42
+      - id: cluster-seurat
+        name: "Seurat Louvain clustering"
+        software_environment: "seurat"
+        repository:
+          url: https://github.com/omni-scrna/seurat
+          commit: add-clustering
+          entrypoint: clustering
+        parameters:
+          - resolution: [0.5, 1.0]
+            random_seed: 42
+                
 
   - id: cluster-metrics
     inputs:
