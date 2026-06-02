@@ -145,8 +145,8 @@ stages:
         name: "scrapper PCA"
         software_environment: "scrapper"
         repository:
-          url: https://github.com/omni-scrna/scrapper
-          commit: 5c93b1e
+          url: ../split-stages-plan-modules/scrapper
+          commit: center-only
           entrypoint: pca
         parameters:
           - solver: [exact, irlba]
@@ -234,6 +234,24 @@ stages:
           - solver: [rapids-randomized]
             n_components: 50
             random_seed: *pca_seeds
+      # CPU-profiling spike — mirror of pca-scrapper, but routed through the
+      # denet wrapper and pinned to 8 cores / 8 GB RAM so we can compare
+      # rapids (GPU) against scrapper (CPU) with comparable resource budgets
+      # under the podman backend. Trimmed sweep keeps the spike short.
+      - id: pca-scrapper-prof
+        name: "scrapper PCA (denet-profiled, 8c/8GB)"
+        software_environment: "scrapper"
+        resources:
+          cores: 8
+          mem_mb: 8000
+        repository:
+          url: ../split-stages-plan-modules/scrapper
+          commit: center-only
+          entrypoint: pca-prof
+        parameters:
+          - solver: [exact, irlba, random]
+            n_components: 50
+            random_seed: 42
 
   # Parallel PCA branch consuming the BPCells-converted matrix produced by
   # five-pre-bpcells. Output id `pcas.tsv` matches five-pca's so downstream

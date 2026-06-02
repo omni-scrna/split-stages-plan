@@ -1,6 +1,7 @@
 name: scrapper
 channels:
 - https://prefix.dev/almost-conductor
+- https://repo.prefix.dev/edge
 - conda-forge
 - bioconda
 - nodefaults
@@ -14,3 +15,7 @@ dependencies:
 - r-matrix *
 - r-optparse *
 - r-data.table *
+- r-jsonlite *
+# denet: CPU profiling spike for the pca-prof entrypoint. From prefix.dev/edge
+# until it lands in conda-forge.
+- denet >=0.7.1,<0.8

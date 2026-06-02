@@ -1,0 +1,19 @@
+# BPCells-backed Seurat env. Split from envs/seurat.yml because the
+# bioconda r-bpcells builds pin r-base to 4.4, while bioconductor-anndatar
+# pins r-base to 4.5 — mutually exclusive at solve time. The bpcells-convert
+# entrypoint and the bpcells-* PCA solvers don't use anndatar (they read
+# HDF5/TENx matrices and BPCells tarballs), so dropping anndatar here is safe.
+name: seurat-bpcells
+channels:
+- conda-forge
+- bioconda
+- nodefaults
+dependencies:
+- r-base >=4.4,<4.5
+- r-seurat >=5.0.0
+- bioconductor-rhdf5 *
+- bioconductor-hdf5array *
+- r-data.table *
+- r-optparse *
+- r-magrittr *
+- r-bpcells *

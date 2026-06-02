@@ -14,3 +14,8 @@ dependencies:
 - polars >=1,<2
 - python-igraph >=1.0.0,<2
 - leidenalg >=0.11.0,<0.12
+# obkit: phase logger so scanpy emits the same obkit-events.jsonl as rapids
+# and seurat — required for the "algorithm-only" timing comparison.
+- pip
+- pip:
+  - obkit>=0.0.3, <0.0.4
