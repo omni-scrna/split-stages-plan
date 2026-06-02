@@ -1,0 +1,73 @@
+name: Fixture run
+
+# Executes a trimmed version of the benchmark (every module, one parameter
+# combo each) on the tiny committed fixture in fixtures/1-data. Proves the
+# modules still execute and their interfaces line up, without the 817 MB
+# real dataset.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  fixture-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Conda envs for ~8 modules are large; reclaim space on the runner.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          large-packages: false
+
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.8.10
+        with:
+          environments: plan
+          frozen: false
+          locked: false
+
+      - name: Derive trimmed CI plan
+        run: ci/trim-plan.sh > benchmark_ci.yaml
+
+      # Cache the per-module conda envs snakemake builds (the slow part).
+      # Keyed on the env specs + the omni-data pin so it invalidates on change.
+      - name: Cache module conda envs
+        uses: actions/cache@v4
+        with:
+          path: out_ci/.snakemake/conda
+          key: snakemake-conda-${{ runner.os }}-${{ hashFiles('envs/*.yml', 'envs/*.yaml', 'ci/trim-plan.sh') }}
+
+      - name: Run trimmed benchmark on fixture
+        run: |
+          pixi run -e plan ob run benchmark_ci.yaml \
+            --unpinned --out-dir out_ci --cores 4
+
+      - name: Summarize outputs
+        if: always()
+        run: |
+          {
+            echo "## Fixture run results"
+            echo
+            echo "Module outputs produced:"
+            echo '```'
+            find out_ci -type f \
+              \( -name '*.h5ad' -o -name '*.h5' -o -name '*.tsv' \
+                 -o -name '*.json' -o -name '*.txt.gz' \) \
+              -not -path '*/.snakemake/*' | sort
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fixture-run-out
+          path: |
+            out_ci/.logs/
+            benchmark_ci.yaml
+          retention-days: 7

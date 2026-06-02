@@ -15,6 +15,9 @@ r-tibble = "*"
 [feature.plan.dependencies]
 python = ">=3.12,<3.14"
 pip = "*"
+# conda so `ob run` (snakemake --use-conda) has a backend in-env, no system
+# conda required. conda ships the fast libmamba solver, so mamba is not needed.
+conda = "*"
 
 [feature.plan.pypi-dependencies]
 omnibenchmark = { git = "https://github.com/omnibenchmark/omnibenchmark.git", branch = "main" }

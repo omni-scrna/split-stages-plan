@@ -5,7 +5,7 @@ benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
 
 # Benchmark configuration
 version: "0.0.3"
-api_version: "0.5.0"
+api_version: "0.4.0"
 
 provenance:
   canonical_url: https://raw.githubusercontent.com/omni-scrna/split-stages-plan/refs/heads/main/benchmark_conda.yaml
