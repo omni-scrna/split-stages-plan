@@ -62,17 +62,22 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # tar it ourselves: upload-artifact's globber doesn't reliably descend
+      # into hidden dirs (every output sits under .<hash>/ param dirs), and tar
+      # also preserves the symlinks under .modules. Exclude the multi-GB built
+      # conda envs (cached separately).
+      - name: Package run outputs
+        if: always()
+        run: |
+          tar czf fixture-run-out.tar.gz \
+            --exclude='out_ci/.snakemake/conda' \
+            $( [ -d out_ci ] && echo out_ci ) \
+            $( [ -f benchmark_ci.yaml ] && echo benchmark_ci.yaml )
+
       - name: Upload run artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: fixture-run-out
-          # Whole out dir including hidden subdirs (.logs, .snakemake, .modules,
-          # .metadata). upload-artifact drops hidden files unless told otherwise.
-          # Exclude the built conda envs — multi-GB and cached separately.
-          path: |
-            out_ci
-            !out_ci/.snakemake/conda
-            benchmark_ci.yaml
-          include-hidden-files: true
+          path: fixture-run-out.tar.gz
           retention-days: 7
