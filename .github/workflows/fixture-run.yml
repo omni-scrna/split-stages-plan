@@ -67,7 +67,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fixture-run-out
+          # Whole out dir including hidden subdirs (.logs, .snakemake, .modules,
+          # .metadata). upload-artifact drops hidden files unless told otherwise.
+          # Exclude the built conda envs — multi-GB and cached separately.
           path: |
-            out_ci/.logs/
+            out_ci
+            !out_ci/.snakemake/conda
             benchmark_ci.yaml
+          include-hidden-files: true
           retention-days: 7
