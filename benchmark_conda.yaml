@@ -45,14 +45,14 @@ stages:
       - id: rawdata.clusters_truth_num
         path: "{dataset}.clusters_truth_num.txt"
       - id: properties.info
-        path: "{dataset}_properties.info"
+        path: "{dataset}_properties.yaml"
     modules:
       - id: datasets
         name: "R-based dataset downloads"
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 3fe3990
+          commit: 8c3ae17
         parameters:
           - dataset_name: "be1"
             batch_var: Sample
@@ -127,7 +127,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 0ea3db2
+          commit: 1093f6e
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -303,7 +303,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 0ea3db2
+          commit: 1093f6e
           entrypoint: integrate
         parameters:
           - method: [rpca, fastmnn]
