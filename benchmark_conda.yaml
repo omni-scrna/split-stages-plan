@@ -267,7 +267,7 @@ stages:
           commit: add-clustering
           entrypoint: clustering
         parameters:
-          - resolution: ["louvain_original", "louvain_multilevel_refinement", "slm", "leiden"]
+          - modularity_algorithm: ["louvain_original", "louvain_multilevel_refinement", "slm", "leiden"]
             random_seed: 42
                 
 
