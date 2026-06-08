@@ -125,7 +125,7 @@ stages:
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
             number_selected: 2000
-            batch_variable: ["cell_line"] # this can only be used for sc-mix and it doesn't make sense
+            batch_variable: ["Sample"] 
       - id: selection-scrapper
         name: "Scrapper-based gene selection"
         software_environment: "scrapper"
