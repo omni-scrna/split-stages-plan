@@ -1,7 +1,4 @@
 ```mermaid
----
-title: split-stages-plan
----
 flowchart LR
 	classDef param fill:#f96
 	subgraph one-data
