@@ -215,14 +215,14 @@ stages:
           commit: 0d0050e
           entrypoint: embedding-r
 
-  - id: graph
+  - id: nngraph
     inputs:
       - pcas.tsv
     outputs:
       - id: neighbors.h5
         path: "{dataset}_neighbors.h5"
     modules:
-      - id: graph-scanpy
+      - id: nngraph-scanpy
         name: "scanpy KNN graph"
         software_environment: "scanpy"
         repository:
