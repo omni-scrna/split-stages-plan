@@ -31,6 +31,14 @@ jobs:
           frozen: false
           locked: false
 
+      # TEMPORARY: test ob from a bugfix branch instead of the main pin in
+      # pixi.toml. Force-reinstall over the locked omnibenchmark so we don't
+      # have to touch pixi.toml/pixi.lock. Revert once the fix lands in main.
+      - name: Install ob from bugfix branch
+        run: |
+          pixi run -e plan pip install --force-reinstall --no-deps \
+            "omnibenchmark @ git+https://github.com/omnibenchmark/omnibenchmark.git@bug/log-decode-error"
+
       - name: Derive trimmed CI plan
         run: ci/trim-plan.sh > benchmark_ci.yaml
 
