@@ -277,7 +277,7 @@ stages:
           entrypoint: clustering
         parameters:
           - modularity_algorithm: ["louvain_original", "louvain_multilevel_refinement", "slm", "leiden"]
-          - resolution: [0.5, 1.0]
+            resolution: [0.5, 1.0]
             random_seed: 42
                 
 
