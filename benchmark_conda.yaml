@@ -41,6 +41,7 @@ software_environments:
     name: annotate env
     conda: envs/annotate.yml
 
+
 stages:
   - id: one-data
     outputs:
@@ -50,15 +51,24 @@ stages:
         path: "{dataset}.clusters_truth.tsv"
       - id: rawdata.clusters_truth_num
         path: "{dataset}.clusters_truth_num.txt"
+      - id: properties.info
+        path: "{dataset}_properties.yaml"
     modules:
       - id: datasets
         name: "R-based dataset downloads"
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 10112c9
+          commit: 8c3ae17
         parameters:
-          - dataset_name: ["be1"]
+          - dataset_name: "be1"
+            batch_var: Sample
+            labels_var: Sample
+            sample_var: Sample
+          #- dataset_name: "sc-mix"
+          #  batch_var: null
+          #  labels_var: cell_line
+          #  sample_var: null
 
   - id: two-filter
     inputs:
@@ -114,6 +124,7 @@ stages:
       - rawdata.h5ad
       - normalized.h5
       - filtered.cellids
+      - properties.info
     outputs:
       - id: normalized_selected.h5
         path: "{dataset}_normalized_selected.h5"
@@ -123,18 +134,17 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 4c9ce1d
+          commit: 7d553fb
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
             number_selected: 2000
-            batch_variable: ["Sample"] 
       - id: selection-scrapper
         name: "Scrapper-based gene selection"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 11abd40
+          commit: 21463b5
           entrypoint: select
         parameters:
           - number_selected: 2000
@@ -146,8 +156,7 @@ stages:
       #     commit: "19e5811"
       #   parameters:
       #     - selection_type: ["scanpy_hvg", "pearson_residuals"]
-      #       number_selected: 2000     
-
+      #       number_selected: 2000
 
   - id: five-pca
     resources:
@@ -157,15 +166,15 @@ stages:
     outputs:
       - id: pcas.tsv
         path: "{dataset}_pcas.tsv"
-        # TODO: this needs https://github.com/omnibenchmark/omnibenchmark/pull/323 merged to work
-        # path: "{name}_{params.solver}_n_{params.n_components}.h5"
+      - id: loadings.tsv
+        path: "{dataset}_loadings.tsv"
     modules:
       - id: pca-scanpy
         name: "scanpy PCA"
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: graphs
+          commit: 83f0d49
           entrypoint: pca
         parameters:
           - solver: [arpack, randomized]
@@ -176,7 +185,7 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 5c93b1e
+          commit: 21463b5
           entrypoint: pca
         parameters:
           - solver: [exact, irlba, random]
@@ -206,19 +215,19 @@ stages:
           commit: 0d0050e
           entrypoint: embedding-r
 
-  - id: graph
+  - id: nngraph
     inputs:
       - pcas.tsv
     outputs:
       - id: neighbors.h5
         path: "{dataset}_neighbors.h5"
     modules:
-      - id: graph-scanpy
+      - id: nngraph-scanpy
         name: "scanpy KNN graph"
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: graphs
+          commit: 88c668d
           entrypoint: knn
         parameters:
           - n_neighbors: 15
@@ -288,24 +297,36 @@ stages:
           commit: 0d0050e
           entrypoint: cluster-r
 
-#  - id: seven-integrate
-#    inputs:
-#      - pcas.tsv
-#      - rawdata.h5ad
-#    outputs:
-#      - id: corrected.tsv
-#        path: "{dataset}_corrected.tsv"
-#    modules:
-#      - id: integration-harmony
-#        name: "Harmony batch correction"
-#        software_environment: "integrate"
-#        repository:
-#          url: https://github.com/omni-scrna/7-integrate
-#          commit: b4c0b02
-#          entrypoint: harmony-r
-#        parameters:
-#          - batch_variable: ["Sample"]
-#            theta: [0.1, 0.2]
+  - id: seven-integrate
+    inputs:
+      - pcas.tsv
+      - loadings.tsv
+      - normalized_selected.h5
+      - rawdata.h5ad
+      - properties.info
+    outputs:
+      - id: corrected.tsv
+        path: "{dataset}_corrected.tsv"
+    modules:
+      - id: integration-harmony
+        name: "Harmony batch correction"
+        software_environment: "integrate"
+        repository:
+          url: https://github.com/omni-scrna/7-integrate
+          commit: 108fa8c
+          entrypoint: harmony-r
+        parameters:
+          - theta: [0.1, 2]
+      - id: integration-seurat
+        name: "Seurat IntegrateLayers batch correction"
+        software_environment: "seurat"
+        repository:
+          url: https://github.com/omni-scrna/seurat
+          commit: 7d553fb
+          entrypoint: integrate
+        parameters:
+          - method: [rpca]
+            k_anchor: [5, 20]
 
   - id: nine-annotate
     inputs:
@@ -323,94 +344,3 @@ stages:
       parameters:
         - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 
-#  - id: six-viz
-#    inputs:
-#        - 5-pca.pca
-#    outputs:
-#      - id: 6-viz.components
-#        path: "{dataset}_components.txt.gz"
-#    modules:
-#      - id: cool_method_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
-
-#  - id: seven-integrate
-#    inputs:
-#        - 5-pca.pca
-#    outputs:
-#      - id: 7-integrate.integrated
-#        path: "{dataset}_integrated.txt.gz"
-#    modules:
-#      - id: integration_method_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
-
-#  - id: eight-cluster
-#    inputs:
-#        - 5-pca.pca
-#        - 3-normalize.normalized
-#        - 7-integrate.integrated
-#    outputs:
-#      - id: 8a-cluster.graph
-#        path: "{dataset}_graph.txt.gz"
-#      - id: 8a-cluster.clusters
-#        path: "{dataset}_clusters.txt.gz"
-#    modules:
-#      - id: whizbang_clustering_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
-
-#  - id: eight-annotate
-#    inputs:
-#        - 5-pca.pca
-#        - 3-normalize.normalized
-#        - 7-integrate.integrated
-#    outputs:
-#      - id: 8b-annotate.annotations
-#        path: "{dataset}_annotations.txt.gz"
-#    modules:
-#      - id: whizbang_prediction_1
-#        name: "the only method you will ever need"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/my_method
-#          commit: deadbeef
-#        parameters:
-#          - param1: "value"
-
-#  - id: metrics
-#    inputs:
-#        - 5-pca.pca
-#        - 3-normalize.normalized
-#        - 6-viz.components
-#        - 7-integrate.integrated
-#        - 8a-cluster.clusters
-#        - 8a-cluster.graph
-#        - 8b-annotate.annotations
-#    outputs:
-#      - id: metrics.scores
-#        path: "{dataset}.scores.gz"
-#    modules:
-#      - id: strict_metric_1
-#        name: "a very well defined metric"
-#        software_environment: "apptainer_env"
-#        repository:
-#          url: https://github.com/CHANGEME/the_right_metric
-#          commit: c0ffee
-#        parameters:
-#          - foo: "bar"

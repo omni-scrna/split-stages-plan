@@ -1,0 +1,2 @@
+ob run benchmark_conda.yaml -c 16 -k --unpinned
+#ob run benchmark_conda.yaml -c 16 -k --unpinned --telemetry --telemetry-output ./telem.jsonl
