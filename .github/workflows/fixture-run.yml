@@ -46,7 +46,7 @@ jobs:
         run: |
           pixi run -e plan ob run benchmark_ci.yaml \
             --unpinned --out-dir out_ci --cores 4
-          tail -n 100 out/.logs/snakemake*.log 
+          tail -n 100 out_ci/.logs/snakemake*.log 
 
       - name: Summarize outputs
         if: always()
