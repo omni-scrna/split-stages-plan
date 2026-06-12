@@ -288,24 +288,24 @@ stages:
           commit: 0d0050e
           entrypoint: cluster-r
 
-  - id: seven-integrate
-    inputs:
-      - pcas.tsv
-      - rawdata.h5ad
-    outputs:
-      - id: corrected.tsv
-        path: "{dataset}_corrected.tsv"
-    modules:
-      - id: integration-harmony
-        name: "Harmony batch correction"
-        software_environment: "integrate"
-        repository:
-          url: https://github.com/omni-scrna/7-integrate
-          commit: b4c0b02
-          entrypoint: harmony-r
-        parameters:
-          - batch_variable: ["Sample"]
-            theta: [0.1, 0.2]
+#  - id: seven-integrate
+#    inputs:
+#      - pcas.tsv
+#      - rawdata.h5ad
+#    outputs:
+#      - id: corrected.tsv
+#        path: "{dataset}_corrected.tsv"
+#    modules:
+#      - id: integration-harmony
+#        name: "Harmony batch correction"
+#        software_environment: "integrate"
+#        repository:
+#          url: https://github.com/omni-scrna/7-integrate
+#          commit: b4c0b02
+#          entrypoint: harmony-r
+#        parameters:
+#          - batch_variable: ["Sample"]
+#            theta: [0.1, 0.2]
 
   - id: nine-annotate
     inputs:
