@@ -10,6 +10,8 @@ validate-artifacts = "validators/all.sh"
 [feature.validation.dependencies]
 r-readr = "*"
 r-tibble = "*"
+python = "*"
+h5py = "*"
 
 # Plan validation: omnibenchmark from its main branch.
 [feature.plan.dependencies]
