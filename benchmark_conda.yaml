@@ -320,8 +320,11 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 8c5bd85
+          commit: 641ee58
           entrypoint: scanorama
+        parameters:
+          - knn: [20]
+            sigma: [15]
 
   - id: nine-annotate
     inputs:
