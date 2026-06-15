@@ -2,18 +2,14 @@ name: split-stages-plan
 id: split_stages_plan
 description: This benchmark lays out stages for each step of an scRNA-seq pipeline
 benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
-
 # Benchmark configuration
 version: "0.0.3"
 api_version: "0.4.0"
-
 provenance:
   canonical_url: https://raw.githubusercontent.com/omni-scrna/split-stages-plan/refs/heads/main/benchmark_conda.yaml
-
 # The default software environment for this benchmark.
 # One of: apptainer, conda, envmodules.
 software_backend: "conda"
-
 # Available software environments
 software_environments:
   r_conda:
@@ -43,8 +39,6 @@ software_environments:
   integrate-py:
     name: Python integration env
     conda: envs/integrate-py.yml
-
-
 stages:
   - id: one-data
     outputs:
@@ -68,11 +62,10 @@ stages:
             batch_var: Sample
             labels_var: Sample
             sample_var: Sample
-          #- dataset_name: "sc-mix"
-          #  batch_var: null
-          #  labels_var: cell_line
-          #  sample_var: null
-
+        #- dataset_name: "sc-mix"
+        #  batch_var: null
+        #  labels_var: cell_line
+        #  sample_var: null
   - id: two-filter
     inputs:
       - rawdata.h5ad
@@ -87,7 +80,7 @@ stages:
           url: https://github.com/scrna-bench/2-filter
           commit: ac74749
         parameters:
-          - filter_type: ["manual", "scrapper-auto"]
+          - filter_type: ["manual"]
       - id: filtering-py
         name: "Python-based cell-level filters"
         software_environment: "py_conda"
@@ -96,7 +89,6 @@ stages:
           commit: "64b89e6"
         parameters:
           - filter_type: ["manual"]
-
   - id: three-normalize
     inputs:
       - rawdata.h5ad
@@ -112,7 +104,7 @@ stages:
           url: https://github.com/scrna-bench/3-normalize
           commit: b2fb9f3
         parameters:
-          - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
+          - normalization_type: ["seurat_log1pCP10k"]
       - id: normalization-py
         name: "Python-based scRNA-seq normalization methods"
         software_environment: "py_conda"
@@ -121,7 +113,6 @@ stages:
           commit: "6a95673"
         parameters:
           - normalization_type: ["scanpy_log1pCP10k"]
-
   - id: four-select
     inputs:
       - rawdata.h5ad
@@ -140,7 +131,7 @@ stages:
           commit: 7d553fb
           entrypoint: select
         parameters:
-          - selection_type: ["seurat_vst", "seurat_vst_batch"]
+          - selection_type: ["seurat_vst"]
             number_selected: 2000
       - id: selection-scrapper
         name: "Scrapper-based gene selection"
@@ -151,16 +142,15 @@ stages:
           entrypoint: select
         parameters:
           - number_selected: 2000
-      # - id: selection-py
-      #   name: "Python-based scRNA-seq gene selection methods"
-      #   software_environment: "py_conda"
-      #   repository:
-      #     url: https://github.com/omni-scrna/4-select-py
-      #     commit: "19e5811"
-      #   parameters:
-      #     - selection_type: ["scanpy_hvg", "pearson_residuals"]
-      #       number_selected: 2000
-
+    # - id: selection-py
+    #   name: "Python-based scRNA-seq gene selection methods"
+    #   software_environment: "py_conda"
+    #   repository:
+    #     url: https://github.com/omni-scrna/4-select-py
+    #     commit: "19e5811"
+    #   parameters:
+    #     - selection_type: ["scanpy_hvg", "pearson_residuals"]
+    #       number_selected: 2000
   - id: five-pca
     resources:
       cores: 4
@@ -180,7 +170,7 @@ stages:
           commit: 83f0d49
           entrypoint: pca
         parameters:
-          - solver: [arpack, randomized]
+          - solver: [arpack]
             n_components: 50
             random_seed: 42
       - id: pca-scrapper
@@ -191,10 +181,9 @@ stages:
           commit: 21463b5
           entrypoint: pca
         parameters:
-          - solver: [exact, irlba, random]
+          - solver: [exact]
             n_components: 50
             random_seed: 42
-
   - id: six-embedding-metrics
     inputs:
       - pcas.tsv
@@ -210,6 +199,7 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: 0d0050e
           entrypoint: embedding-py
+        parameters: []
       - id: embedding-metrics-r
         name: "Embedding quality metrics in R"
         software_environment: "metrics"
@@ -217,7 +207,7 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: 0d0050e
           entrypoint: embedding-r
-
+        parameters: []
   - id: nngraph
     inputs:
       - pcas.tsv
@@ -236,7 +226,6 @@ stages:
           - n_neighbors: 15
             random_seed: 42
             flavor: "umap"
-
   # TODO: re-enable once metrics R module reads the bundled neighbors.h5
   # - id: graph-metrics
   #   inputs:
@@ -253,7 +242,6 @@ stages:
   #         url: https://github.com/omni-scrna/metrics
   #         commit: 0d0050e
   #         entrypoint: graph-r
-
   - id: cluster
     inputs:
       - neighbors.h5
@@ -269,9 +257,8 @@ stages:
           commit: graphs
           entrypoint: cluster
         parameters:
-          - resolution: [0.5, 1.0]
+          - resolution: [0.5]
             random_seed: 42
-
   - id: cluster-metrics
     inputs:
       - clusters.tsv
@@ -287,7 +274,7 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: 0d0050e
           entrypoint: cluster-r
-
+        parameters: []
   - id: seven-integrate
     inputs:
       - pcas.tsv
@@ -307,7 +294,7 @@ stages:
           commit: 108fa8c
           entrypoint: harmony-r
         parameters:
-          - theta: [0.1, 2]
+          - theta: [0.1]
       - id: integration-seurat
         name: "Seurat IntegrateLayers batch correction"
         software_environment: "seurat"
@@ -317,7 +304,7 @@ stages:
           entrypoint: integrate
         parameters:
           - method: [rpca]
-            k_anchor: [5, 20]
+            k_anchor: [5]
       - id: integration-scanorama
         name: "Scanorama batch correction"
         software_environment: "integrate-py"
@@ -328,20 +315,18 @@ stages:
         parameters:
           - knn: [20]
             sigma: [15]
-
   - id: nine-annotate
     inputs:
-    - normalized_selected.h5
+      - normalized_selected.h5
     outputs:
-    - id: annotations
-      path: '{dataset}_annotations.tsv'
+      - id: annotations
+        path: '{dataset}_annotations.tsv'
     modules:
-    - id: annotation-singler
-      name: singler annotation
-      software_environment: annotate
-      repository:
-        url: https://github.com/omni-scrna/9-annotate
-        commit: ba5bfcf
-      parameters:
-        - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
-
+      - id: annotation-singler
+        name: singler annotation
+        software_environment: annotate
+        repository:
+          url: https://github.com/omni-scrna/9-annotate
+          commit: ba5bfcf
+        parameters:
+          - reference: ["HumanPrimaryCellAtlasData"]
