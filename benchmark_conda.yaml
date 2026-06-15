@@ -315,6 +315,13 @@ stages:
         parameters:
           - method: [rpca]
             k_anchor: [5, 20]
+      - id: integration-scanorama
+        name: "Scanorama batch correction"
+        software_environment: "scanpy"
+        repository:
+          url: /home/jiayiwang/omni-scrna/scanpy
+          commit: scanorama
+          entrypoint: scanorama
 
   - id: nine-annotate
     inputs:
