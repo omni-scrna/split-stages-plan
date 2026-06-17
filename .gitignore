@@ -59,3 +59,4 @@ Thumbs.db
 # CI-derived trimmed plan + its outputs
 benchmark_ci.yaml
 out_ci/
+benchmark_minimal.yaml
