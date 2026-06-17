@@ -2,7 +2,7 @@ name: Fixture run
 
 # Executes a trimmed version of the benchmark (every module, one parameter
 # combo each) on the tiny committed fixture in fixtures/1-data. Proves the
-# modules still execute and their interfaces line up, without the 817 MB
+# modules still execute and their stage contracts line up, without the 817 MB
 # real dataset.
 
 on:
