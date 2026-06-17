@@ -20,6 +20,10 @@ pip = "*"
 # conda so `ob run` (snakemake --use-conda) has a backend in-env, no system
 # conda required. conda ships the fast libmamba solver, so mamba is not needed.
 conda = "*"
+# mikefarah's yq, used by ci/trim-plan.sh. Keep it in-env so CI never falls back
+# to a host-installed snap yq (snap-confine can't run inside the self-hosted
+# runner's systemd service cgroup).
+go-yq = "*"
 
 [feature.plan.pypi-dependencies]
 omnibenchmark = { git = "https://github.com/omnibenchmark/omnibenchmark.git", branch = "main" }

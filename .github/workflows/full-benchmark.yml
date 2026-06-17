@@ -45,7 +45,9 @@ jobs:
           locked: false
 
       - name: Derive trimmed CI plan
-        run: ci/trim-plan.sh > benchmark_ci.yaml
+        # via pixi so trim-plan.sh's `yq` resolves to the in-env go-yq, not the
+        # host snap (which can't run inside the runner's systemd cgroup).
+        run: pixi run -e plan ci/trim-plan.sh > benchmark_ci.yaml
 
       - name: Run trimmed benchmark on fixture (fail-fast)
         run: |
