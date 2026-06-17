@@ -1,0 +1,80 @@
+name: Full benchmark (self-hosted)
+
+# Runs the FULL benchmark on the self-hosted omni runner (24 cores by default),
+# reusing the persistent output + per-module conda caches that live on the box
+# under /opt/cache/runner. The short fixture run is a gate: if it fails, the
+# full run never starts.
+#
+# On-demand only (workflow_dispatch) — we don't want a 24-core job on every push.
+
+on:
+  workflow_dispatch:
+    inputs:
+      cores:
+        description: "Cores for the full run"
+        default: "24"
+      clean:
+        description: "Wipe the cached output dirs and start fresh"
+        type: boolean
+        default: false
+
+concurrency:
+  group: full-benchmark-${{ github.ref }}
+  cancel-in-progress: false # never kill a running benchmark
+
+env:
+  # Persistent dirs on the omni box (created by the github_runner Ansible play).
+  # Living outside the job workspace, they survive checkout cleaning and are
+  # reused across runs; snakemake's per-module conda envs land under <dir>/.snakemake/conda.
+  OB_OUT_DIR: /opt/cache/runner/out
+  OB_FIXTURE_DIR: /opt/cache/runner/out_ci
+  APPTAINER_CACHEDIR: /opt/cache/runner/apptainer
+
+jobs:
+  # --- Gate: the shortest fixture test. If this fails, `full` is skipped. -----
+  fixture:
+    name: Short fixture test (gate)
+    runs-on: [self-hosted, omni]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.10
+        with:
+          environments: plan
+          frozen: false
+          locked: false
+
+      - name: Derive trimmed CI plan
+        run: ci/trim-plan.sh > benchmark_ci.yaml
+
+      - name: Run trimmed benchmark on fixture (fail-fast)
+        run: |
+          mkdir -p "$OB_FIXTURE_DIR"
+          pixi run -e plan ob run benchmark_ci.yaml \
+            --unpinned --out-dir "$OB_FIXTURE_DIR" --cores 4
+
+  # --- Heavy full run, only after the fixture gate passes ---------------------
+  full:
+    name: Full benchmark
+    needs: fixture
+    runs-on: [self-hosted, omni]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: prefix-dev/setup-pixi@v0.8.10
+        with:
+          environments: plan
+          frozen: false
+          locked: false
+
+      - name: Clean cached output (optional, start fresh)
+        if: ${{ inputs.clean }}
+        run: rm -rf "$OB_OUT_DIR" "$OB_FIXTURE_DIR"
+
+      - name: Ensure cached output dir exists
+        run: mkdir -p "$OB_OUT_DIR"
+
+      - name: Run full benchmark (${{ inputs.cores }} cores)
+        run: |
+          pixi run -e plan ob run benchmark_conda.yaml \
+            --unpinned --out-dir "$OB_OUT_DIR" --cores "${{ inputs.cores }}" -k
