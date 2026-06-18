@@ -62,8 +62,12 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 8c3ae17
+          commit: schema-cli-rearrange
         parameters:
+          #- dataset_name: "be1-subset"
+          #  batch_var: Sample
+          #  labels_var: Sample
+          #  sample_var: Sample
           - dataset_name: "be1"
             batch_var: Sample
             labels_var: Sample
@@ -76,6 +80,7 @@ stages:
   - id: two-filter
     inputs:
       - rawdata.h5ad
+      - properties.info
     outputs:
       - id: filtered.cellids
         path: "{dataset}_cellids.txt.gz"
@@ -85,23 +90,25 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: d3dfb73
-      - id: filtering-r
-        name: "R-based cell-level filters"
-        software_environment: "r_conda"
-        repository:
-          url: https://github.com/omni-scrna/2-filter
-          commit: ac74749
-        parameters:
-          - filter_type: ["manual"]
-      - id: filtering-py
-        name: "Python-based cell-level filters"
-        software_environment: "py_conda"
-        repository:
-          url: https://github.com/omni-scrna/2-filter-py
-          commit: "64b89e6"
-        parameters:
-          - filter_type: ["manual"]
+          commit: schema-cli-rearrange
+          entrypoint: filter
+      # TODO: rewire these below to handle properties.info arg
+      #- id: filtering-r
+      #  name: "R-based cell-level filters"
+      #  software_environment: "r_conda"
+      #  repository:
+      #    url: https://github.com/omni-scrna/2-filter
+      #    commit: ac74749
+      #  parameters:
+      #    - filter_type: ["manual"]
+      #- id: filtering-py
+      #  name: "Python-based cell-level filters"
+      #  software_environment: "py_conda"
+      #  repository:
+      #    url: https://github.com/omni-scrna/2-filter-py
+      #    commit: "64b89e6"
+      #  parameters:
+      #    - filter_type: ["manual"]
 
   - id: three-normalize
     inputs:
@@ -124,7 +131,8 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: d3dfb73
+          commit: schema-cli-rearrange
+          entrypoint: normalize
       - id: normalization-py
         name: "Python-based scRNA-seq normalization methods"
         software_environment: "py_conda"
