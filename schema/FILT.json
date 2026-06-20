@@ -1,6 +1,6 @@
 {
-  "stage": "two-filter",
-  "version": "0.1.0",
+  "stage": "FILT",
+  "version": "0.1.1",
   "benchmark": "omni-scrna/split-stages-plan",
   "args": [
     { "flag": "--properties.info", "dest": "properties_info", "type": "path", "help": "JSON file with relevant column names" },

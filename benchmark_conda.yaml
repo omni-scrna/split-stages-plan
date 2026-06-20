@@ -118,7 +118,7 @@ stages:
       #  parameters:
       #    - normalization_type: ["scanpy_log1pCP10k"]
 
-  - id: SELECT
+  - id: FEAT
     inputs:
       - rawdata.h5ad
       - normalized.h5
