@@ -40,10 +40,13 @@ software_environments:
   annotate:
     name: annotate env
     conda: envs/annotate.yml
+  integrate-py:
+    name: Python integration env
+    conda: envs/integrate-py.yml
 
 
 stages:
-  - id: one-data
+  - id: DATA
     outputs:
       - id: rawdata.h5ad
         path: "{dataset}.h5ad"
@@ -59,8 +62,12 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 8c3ae17
+          commit: 3a582a
         parameters:
+          #- dataset_name: "be1-subset"
+          #  batch_var: Sample
+          #  labels_var: Sample
+          #  sample_var: Sample
           - dataset_name: "be1"
             batch_var: Sample
             labels_var: Sample
@@ -70,31 +77,23 @@ stages:
           #  labels_var: cell_line
           #  sample_var: null
 
-  - id: two-filter
+  - id: FILT
     inputs:
       - rawdata.h5ad
+      - properties.info
     outputs:
       - id: filtered.cellids
         path: "{dataset}_cellids.txt.gz"
     modules:
-      - id: filtering-r
-        name: "R-based cell-level filters"
-        software_environment: "r_conda"
+      - id: filter-scrapper
+        name: "scrapper-style filtering"
+        software_environment: "scrapper"
         repository:
-          url: https://github.com/scrna-bench/2-filter
-          commit: ac74749
-        parameters:
-          - filter_type: ["manual", "scrapper-auto"]
-      - id: filtering-py
-        name: "Python-based cell-level filters"
-        software_environment: "py_conda"
-        repository:
-          url: https://github.com/omni-scrna/2-filter-py
-          commit: "64b89e6"
-        parameters:
-          - filter_type: ["manual"]
+          url: https://github.com/omni-scrna/scrapper
+          commit: 19b1ae8
+          entrypoint: filter
 
-  - id: three-normalize
+  - id: NORM
     inputs:
       - rawdata.h5ad
       - filtered.cellids
@@ -102,24 +101,24 @@ stages:
       - id: normalized.h5
         path: "{dataset}_normalized.h5"
     modules:
-      - id: normalization-r
-        name: "R-based scRNA-seq normalization methods"
-        software_environment: "r_conda"
+      - id: normalize-scrapper
+        name: "scrapper-based normalization"
+        software_environment: "scrapper"
         repository:
-          url: https://github.com/scrna-bench/3-normalize
-          commit: b2fb9f3
-        parameters:
-          - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
-      - id: normalization-py
-        name: "Python-based scRNA-seq normalization methods"
-        software_environment: "py_conda"
-        repository:
-          url: https://github.com/omni-scrna/3-normalize-py
-          commit: "6a95673"
-        parameters:
-          - normalization_type: ["scanpy_log1pCP10k"]
+          url: https://github.com/omni-scrna/scrapper
+          commit: 19b1ae8
+          entrypoint: normalize
+      # TODO: below normalization needs to be rewired to scanpy entrypoint
+      #- id: normalization-py
+      #  name: "Python-based scRNA-seq normalization methods"
+      #  software_environment: "py_conda"
+      #  repository:
+      #    url: https://github.com/omni-scrna/3-normalize-py
+      #    commit: 6a95673
+      #  parameters:
+      #    - normalization_type: ["scanpy_log1pCP10k"]
 
-  - id: four-select
+  - id: SELECT
     inputs:
       - rawdata.h5ad
       - normalized.h5
@@ -148,6 +147,7 @@ stages:
           entrypoint: select
         parameters:
           - number_selected: 2000
+      # TODO: below should be re-wired for scanpy
       # - id: selection-py
       #   name: "Python-based scRNA-seq gene selection methods"
       #   software_environment: "py_conda"
@@ -158,7 +158,7 @@ stages:
       #     - selection_type: ["scanpy_hvg", "pearson_residuals"]
       #       number_selected: 2000
 
-  - id: five-pca
+  - id: PCA
     resources:
       cores: 4
     inputs:
@@ -192,7 +192,7 @@ stages:
             n_components: 50
             random_seed: 42
 
-  - id: six-embedding-metrics
+  - id: EMBED-M
     inputs:
       - pcas.tsv
       - rawdata.clusters_truth
@@ -215,7 +215,7 @@ stages:
           commit: 0d0050e
           entrypoint: embedding-r
 
-  - id: nngraph
+  - id: NNG
     inputs:
       - pcas.tsv
     outputs:
@@ -251,7 +251,7 @@ stages:
   #         commit: 0d0050e
   #         entrypoint: graph-r
 
-  - id: cluster
+  - id: CLUST
     inputs:
       - neighbors.h5
     outputs:
@@ -269,7 +269,7 @@ stages:
           - resolution: [0.5, 1.0]
             random_seed: 42
 
-  - id: cluster-metrics
+  - id: CLUST-M
     inputs:
       - clusters.tsv
       - rawdata.clusters_truth
@@ -285,7 +285,7 @@ stages:
           commit: 0d0050e
           entrypoint: cluster-r
 
-  - id: seven-integrate
+  - id: INTG8
     inputs:
       - pcas.tsv
       - loadings.tsv
@@ -315,8 +315,18 @@ stages:
         parameters:
           - method: [rpca]
             k_anchor: [5, 20]
+      - id: integration-scanorama
+        name: "Scanorama batch correction"
+        software_environment: "integrate-py"
+        repository:
+          url: https://github.com/omni-scrna/7-integrate-py
+          commit: 7bb03ac
+          entrypoint: scanorama
+        parameters:
+          - knn: [20]
+            sigma: [15]
 
-  - id: nine-annotate
+  - id: ANNO
     inputs:
     - normalized_selected.h5
     outputs:
