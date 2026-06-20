@@ -40,9 +40,9 @@ software_environments:
   annotate:
     name: annotate env
     conda: envs/annotate.yml
-  integrate-py:
-    name: Python integration env
-    conda: envs/integrate-py.yml
+  #integrate-py:
+  #  name: Python integration env
+  #  conda: envs/integrate-py.yml
 
 
 stages:
@@ -133,7 +133,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 7d553fb
+          commit: 7d553fb      # TODO: convert to new param handling
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -174,7 +174,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 83f0d49
+          commit: 83f0d49  # TODO: convert to new param handling
           entrypoint: pca
         parameters:
           - solver: [arpack, randomized]
@@ -185,7 +185,7 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 21463b5
+          commit: harmonize-argparsing
           entrypoint: pca
         parameters:
           - solver: [exact, irlba, random]
@@ -205,14 +205,14 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e
+          commit: 0d0050e  # TODO: convert to new param handling
           entrypoint: embedding-py
       - id: embedding-metrics-r
         name: "Embedding quality metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e
+          commit: 0d0050e  # TODO: convert to new param handling
           entrypoint: embedding-r
 
   - id: NNG
@@ -227,7 +227,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 88c668d
+          commit: 88c668d  # TODO: convert to new param handling
           entrypoint: knn
         parameters:
           - n_neighbors: 15
@@ -263,7 +263,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: graphs
+          commit: graphs  # TODO: convert to new param handling
           entrypoint: cluster
         parameters:
           - resolution: [0.5, 1.0]
@@ -282,7 +282,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e
+          commit: 0d0050e  # TODO: convert to new param handling
           entrypoint: cluster-r
 
   - id: INTG8
@@ -301,7 +301,7 @@ stages:
         software_environment: "integrate"
         repository:
           url: https://github.com/omni-scrna/7-integrate
-          commit: 108fa8c
+          commit: 108fa8c  # TODO: convert to new param handling
           entrypoint: harmony-r
         parameters:
           - theta: [0.1, 2]
@@ -310,21 +310,21 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 7d553fb
+          commit: 7d553fb  # TODO: convert to new param handling
           entrypoint: integrate
         parameters:
           - method: [rpca]
             k_anchor: [5, 20]
-      - id: integration-scanorama
-        name: "Scanorama batch correction"
-        software_environment: "integrate-py"
-        repository:
-          url: https://github.com/omni-scrna/7-integrate-py
-          commit: 7bb03ac
-          entrypoint: scanorama
-        parameters:
-          - knn: [20]
-            sigma: [15]
+      #- id: integration-scanorama
+      #name: "Scanorama batch correction"
+      #  software_environment: "integrate-py"
+      #   repository:
+      #    url: https://github.com/omni-scrna/7-integrate-py
+      #    commit: 7bb03ac
+      #    entrypoint: scanorama
+      #  parameters:
+      #    - knn: [20]
+      #      sigma: [15]
 
   - id: ANNO
     inputs:
@@ -338,7 +338,7 @@ stages:
       software_environment: annotate
       repository:
         url: https://github.com/omni-scrna/9-annotate
-        commit: ba5bfcf
+        commit: ba5bfcf  # TODO: convert to new param handling
       parameters:
         - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 
