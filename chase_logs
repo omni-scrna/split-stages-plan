@@ -1,1 +1,0 @@
-grep "[Er]ror" out/.logs/*.log | grep -v "error details" | grep -v "in rule" | grep -v "CalledProcessError" | grep -v "snakemake_" | awk '{FS="log:"; print $2}' | sort | uniq -c | sort -n -r
