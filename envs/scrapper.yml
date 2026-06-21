@@ -15,7 +15,6 @@ dependencies:
 - bioconductor-anndatar *
 - r-matrix *
 - r-yaml *
-- r-optparse *
 - r-argparser *
 - r-jsonlite *
 - r-data.table *

@@ -133,7 +133,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 7d553fb      # TODO: convert to new param handling
+          commit: harmonize-argparsing  
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -191,6 +191,8 @@ stages:
           - solver: [exact, irlba, random]
             n_components: 50
             random_seed: 42
+      #- id: pca-seurat  # TODO: wire seurat pca
+      #    commit: 
 
   - id: EMBED-M
     inputs:
@@ -310,7 +312,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 7d553fb  # TODO: convert to new param handling
+          commit: harmonize-argparsing 
           entrypoint: integrate
         parameters:
           - method: [rpca]
