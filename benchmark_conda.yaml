@@ -48,16 +48,16 @@ software_environments:
 stages:
   - id: DATA
     outputs:
-      - id: rawdata.h5ad
+      - id: rawdata_h5ad
         path: "{dataset}.h5ad"
-      - id: rawdata.clusters_truth
+      - id: rawdata_clusters_truth
         path: "{dataset}.clusters_truth.tsv"
-      - id: rawdata.clusters_truth_num
+      - id: rawdata_clusters_truth_num
         path: "{dataset}.clusters_truth_num.txt"
-      - id: properties.info
+      - id: properties_info
         path: "{dataset}_properties.yaml"
     modules:
-      - id: datasets
+      - id: data
         name: "R-based dataset downloads"
         software_environment: r_conda
         repository:
@@ -79,13 +79,13 @@ stages:
 
   - id: FILT
     inputs:
-      - rawdata.h5ad
-      - properties.info
+      - rawdata_h5ad
+      - properties-info
     outputs:
-      - id: filtered.cellids
+      - id: filtered_cellids
         path: "{dataset}_cellids.txt.gz"
     modules:
-      - id: filter-scrapper
+      - id: f-scrapper
         name: "scrapper-style filtering"
         software_environment: "scrapper"
         repository:
@@ -95,13 +95,13 @@ stages:
 
   - id: NORM
     inputs:
-      - rawdata.h5ad
-      - filtered.cellids
+      - rawdata_h5ad
+      - filtered_cellids
     outputs:
-      - id: normalized.h5
+      - id: normalized_h5
         path: "{dataset}_normalized.h5"
     modules:
-      - id: normalize-scrapper
+      - id: norm-scrapper
         name: "scrapper-based normalization"
         software_environment: "scrapper"
         repository:
@@ -122,15 +122,15 @@ stages:
 
   - id: FEAT
     inputs:
-      - rawdata.h5ad
-      - normalized.h5
-      - filtered.cellids
-      - properties.info
+      - rawdata_h5ad
+      - normalized_h5
+      - filtered_cellids
+      - properties_info
     outputs:
-      - id: normalized_selected.h5
+      - id: normalized_selected_h5
         path: "{dataset}_normalized_selected.h5"
     modules:
-      - id: selection-seurat
+      - id: feat-seurat
         name: "Seurat-based scRNA-seq gene selection methods"
         software_environment: "seurat"
         repository:
@@ -140,7 +140,7 @@ stages:
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
             number_selected: 2000
-      - id: selection-scrapper
+      - id: feat-scrapper
         name: "Scrapper-based gene selection"
         software_environment: "scrapper"
         repository:
@@ -164,11 +164,11 @@ stages:
     resources:
       cores: 4
     inputs:
-      - normalized_selected.h5
+      - normalized_selected_h5
     outputs:
-      - id: pcas.tsv
+      - id: pcas_tsv
         path: "{dataset}_pcas.tsv"
-      - id: loadings.tsv
+      - id: loadings_tsv
         path: "{dataset}_loadings.tsv"
     modules:
       - id: pca-scanpy
@@ -198,20 +198,20 @@ stages:
 
   - id: EMBED-M
     inputs:
-      - pcas.tsv
-      - rawdata.clusters_truth
+      - pcas_tsv
+      - rawdata_clusters_truth
     outputs:
       - id: embedding_metrics
         path: "{dataset}_embedding_metrics.json"
     modules:
-      - id: embedding-metrics-py
+      - id: embed-m-py
         name: "Embedding quality metrics in python"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
           commit: 0d0050e  # TODO: convert to new param handling
           entrypoint: embedding-py
-      - id: embedding-metrics-r
+      - id: embed-m-r
         name: "Embedding quality metrics in R"
         software_environment: "metrics"
         repository:
@@ -221,12 +221,12 @@ stages:
 
   - id: NNG
     inputs:
-      - pcas.tsv
+      - pcas_tsv
     outputs:
-      - id: neighbors.h5
+      - id: neighbors_h5
         path: "{dataset}_neighbors.h5"
     modules:
-      - id: nngraph-scanpy
+      - id: nng-scanpy
         name: "scanpy KNN graph"
         software_environment: "scanpy"
         repository:
@@ -239,15 +239,15 @@ stages:
             flavor: "umap"
 
   # TODO: re-enable once metrics R module reads the bundled neighbors.h5
-  # - id: graph-metrics
+  # - id: GRAPH-M
   #   inputs:
-  #     - distances.h5
-  #     - rawdata.clusters_truth
+  #     - distances_h5
+  #     - rawdata_clusters_truth
   #   outputs:
   #     - id: graph_metrics
   #       path: "{dataset}_graph_metrics.json"
   #   modules:
-  #     - id: graph-metrics-r
+  #     - id: graph-m-r
   #       name: "Graph quality metrics in R"
   #       software_environment: "metrics"
   #       repository:
@@ -257,12 +257,12 @@ stages:
 
   - id: CLUST
     inputs:
-      - neighbors.h5
+      - neighbors_h5
     outputs:
-      - id: clusters.tsv
+      - id: clusters_tsv
         path: "{dataset}_clusters.tsv"
     modules:
-      - id: cluster-scanpy
+      - id: clust-scanpy
         name: "scanpy Leiden clustering"
         software_environment: "scanpy"
         repository:
@@ -275,13 +275,13 @@ stages:
 
   - id: CLUST-M
     inputs:
-      - clusters.tsv
-      - rawdata.clusters_truth
+      - clusters_tsv
+      - rawdata_clusters_truth
     outputs:
       - id: cluster_metrics
         path: "{dataset}_cluster_metrics.json"
     modules:
-      - id: cluster-metrics-r
+      - id: clust-m-r
         name: "Partition metrics in R"
         software_environment: "metrics"
         repository:
@@ -291,16 +291,16 @@ stages:
 
   - id: INTG8
     inputs:
-      - pcas.tsv
-      - loadings.tsv
-      - normalized_selected.h5
-      - rawdata.h5ad
-      - properties.info
+      - pcas_tsv
+      - loadings_tsv
+      - normalized_selected_h5
+      - rawdata_h5ad
+      - properties_info
     outputs:
-      - id: corrected.tsv
+      - id: corrected_tsv
         path: "{dataset}_corrected.tsv"
     modules:
-      - id: integration-harmony
+      - id: intg8-harmony
         name: "Harmony batch correction"
         software_environment: "integrate"
         repository:
@@ -309,7 +309,7 @@ stages:
           entrypoint: harmony-r
         parameters:
           - theta: [0.1, 2]
-      - id: integration-seurat
+      - id: intg8-seurat
         name: "Seurat IntegrateLayers batch correction"
         software_environment: "seurat"
         repository:
@@ -320,7 +320,7 @@ stages:
           - method: [rpca]
             k_anchor: [5, 20]
       # TODO rewire scanorama below
-      #- id: integration-scanorama
+      #- id: intg8-scanorama
       #name: "Scanorama batch correction"
       #  software_environment: "integrate-py"
       #   repository:
@@ -333,12 +333,12 @@ stages:
 
   - id: ANNO
     inputs:
-    - normalized_selected.h5
+    - normalized_selected_h5
     outputs:
-    - id: annotations
+    - id: annotations_tsv
       path: '{dataset}_annotations.tsv'
     modules:
-    - id: annotation-singler
+    - id: anno-singler
       name: singler annotation
       software_environment: annotate
       repository:
