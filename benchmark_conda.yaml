@@ -108,15 +108,15 @@ stages:
           url: https://github.com/omni-scrna/scrapper
           commit: harmonize-argparsing 
           entrypoint: normalize
-      # TODO: below normalization needs to be rewired to scanpy entrypoint
-      #- id: normalization-py
-      #  name: "Python-based scRNA-seq normalization methods"
-      #  software_environment: "py_conda"
-      #  repository:
-      #    url: https://github.com/omni-scrna/3-normalize-py
-      #    commit: 6a95673
-      #  parameters:
-      #    - normalization_type: ["scanpy_log1pCP10k"]
+      - id: nr-scanpy
+        name: "Python-based scRNA-seq normalization methods"
+        software_environment: "py_conda"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: harmonize-argparsing
+          entrypoint: normalize
+        parameters:
+          - flavor: ["log1pCP10k"]
 
   - id: FEAT
     inputs:
@@ -129,7 +129,7 @@ stages:
         path: "{dataset}_normalized_selected.h5"
     modules:
       - id: fe-seurat
-        name: "Seurat-based scRNA-seq gene selection methods"
+        name: "seurat-based gene selection"
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
@@ -139,7 +139,7 @@ stages:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
             number_selected: 2000
       - id: fe-scrapper
-        name: "Scrapper-based gene selection"
+        name: "scrapper-based gene selection"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
@@ -147,16 +147,16 @@ stages:
           entrypoint: select
         parameters:
           - number_selected: 2000
-      # TODO: implement scanpy feature selections as scanpy entrypoint
-      # - id: selection-py
-      #   name: "Python-based scRNA-seq gene selection methods"
-      #   software_environment: "py_conda"
-      #   repository:
-      #     url: https://github.com/omni-scrna/4-select-py
-      #     commit: "19e5811"
-      #   parameters:
-      #     - selection_type: ["scanpy_pearson"]
-      #       number_selected: 2000
+      - id: fe-scanpy
+        name: "scanpy-based gene selection"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: harmonize-argparsing
+          entrypoint: feat-select
+        parameters:
+          - flavor: ["scanpy_pearson"]
+            number_selected: 2000
 
   - id: PCA
     resources:
