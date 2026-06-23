@@ -147,7 +147,7 @@ stages:
           entrypoint: select
         parameters:
           - number_selected: 2000
-      # TODO: check if feature selections in scanpy; if so, re-wire
+      # TODO: implement scanpy feature selections as scanpy entrypoint
       # - id: selection-py
       #   name: "Python-based scRNA-seq gene selection methods"
       #   software_environment: "py_conda"
@@ -155,7 +155,7 @@ stages:
       #     url: https://github.com/omni-scrna/4-select-py
       #     commit: "19e5811"
       #   parameters:
-      #     - selection_type: ["scanpy_hvg", "pearson_residuals"]
+      #     - selection_type: ["scanpy_pearson"]
       #       number_selected: 2000
 
   - id: PCA
@@ -191,8 +191,6 @@ stages:
           - solver: [exact, irlba, random]
             n_components: 50
             random_seed: 42
-      #- id: pc-seurat  # TODO: wire seurat pca methods
-      #    commit: 
 
   - id: EMBED-M
     inputs:
@@ -202,7 +200,7 @@ stages:
       - id: embedding_metrics
         path: "{dataset}_embedding_metrics.json"
     modules:
-      # TODO: convert below to new param handling
+      # TODO: convert embedding metrics-py below to new param handling
       #- id: em-metrics-py
       #  name: "Embedding quality metrics in python"
       #  software_environment: "metrics"
@@ -254,7 +252,7 @@ stages:
   #         commit: 0d0050e
   #         entrypoint: graph-r
 
-  # TODO: update branch and convert to new param handling
+  # TODO: update branch and convert scanpy clustering to new param handling
   #- id: CLUST
   #  inputs:
   #    - neighbors_h5
@@ -273,7 +271,7 @@ stages:
   #        - resolution: [0.5, 1.0]
   #          random_seed: 42
 
-  # TODO: update branch and convert to new param handling
+  # TODO: update branch and convert clustering metrics R to new param handling
   #- id: CLUST-M
   #  inputs:
   #    - clusters_tsv
@@ -287,7 +285,7 @@ stages:
   #      software_environment: "metrics"
   #      repository:
   #        url: https://github.com/omni-scrna/metrics
-  #        commit: 0d0050e  # TODO: convert to new param handling
+  #        commit: 0d0050e  
   #        entrypoint: cluster-r
 
   - id: INTG8
@@ -320,7 +318,7 @@ stages:
         parameters:
           - method: [rpca]
             k_anchor: [5, 20]
-      # TODO rewire scanorama below
+      # TODO rewire scanorama below with new param handling
       #- id: in-scanorama
       #name: "Scanorama batch correction"
       #  software_environment: "integrate-py"
