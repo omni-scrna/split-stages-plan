@@ -155,7 +155,7 @@ stages:
           commit: harmonize-argparsing
           entrypoint: feat-select
         parameters:
-          - flavor: ["scanpy_pearson"]
+          - flavor: ["pearson_residuals", "scanpy_seurat"]
             number_selected: 2000
 
   - id: PCA
