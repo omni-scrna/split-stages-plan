@@ -230,7 +230,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 88c668d  # TODO: convert to new param handling
+          commit: harmonize-argparsing
           entrypoint: knn
         parameters:
           - n_neighbors: 15
@@ -254,39 +254,41 @@ stages:
   #         commit: 0d0050e
   #         entrypoint: graph-r
 
-  - id: CLUST
-    inputs:
-      - neighbors_h5
-    outputs:
-      - id: clusters_tsv
-        path: "{dataset}_clusters.tsv"
-    modules:
-      - id: cl-scanpy
-        name: "scanpy Leiden clustering"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: graphs  # TODO: convert to new param handling
-          entrypoint: cluster
-        parameters:
-          - resolution: [0.5, 1.0]
-            random_seed: 42
+  # TODO: update branch and convert to new param handling
+  #- id: CLUST
+  #  inputs:
+  #    - neighbors_h5
+  #  outputs:
+  #    - id: clusters_tsv
+  #      path: "{dataset}_clusters.tsv"
+  #  modules:
+  #    - id: cl-scanpy
+  #      name: "scanpy Leiden clustering"
+  #      software_environment: "scanpy"
+  #      repository:
+  #        url: https://github.com/omni-scrna/scanpy
+  #        commit: graphs  
+  #        entrypoint: cluster
+  #      parameters:
+  #        - resolution: [0.5, 1.0]
+  #          random_seed: 42
 
-  - id: CLUST-M
-    inputs:
-      - clusters_tsv
-      - rawdata_clusters_truth
-    outputs:
-      - id: cluster_metrics
-        path: "{dataset}_cluster_metrics.json"
-    modules:
-      - id: cl-metrics-r
-        name: "Partition metrics in R"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e  # TODO: convert to new param handling
-          entrypoint: cluster-r
+  # TODO: update branch and convert to new param handling
+  #- id: CLUST-M
+  #  inputs:
+  #    - clusters_tsv
+  #    - rawdata_clusters_truth
+  #  outputs:
+  #    - id: cluster_metrics
+  #      path: "{dataset}_cluster_metrics.json"
+  #  modules:
+  #    - id: cl-metrics-r
+  #      name: "Partition metrics in R"
+  #      software_environment: "metrics"
+  #      repository:
+  #        url: https://github.com/omni-scrna/metrics
+  #        commit: 0d0050e  # TODO: convert to new param handling
+  #        entrypoint: cluster-r
 
   - id: INTG8
     inputs:
