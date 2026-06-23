@@ -23,6 +23,10 @@ validate_file <- function(path) {
   if (ok) {
     message(sprintf("OK\t%s", path))
   }
+  ok
 }
 
-invisible(lapply(args, validate_file))
+# pass iff every file validates; exit non-zero on any failure (omnibenchmark
+# `validate outputs` keys pass/fail off the exit code).
+results <- vapply(args, validate_file, logical(1))
+if (!all(results)) quit(status = 1)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Validate a one-data stage .h5ad.
+"""Validate a DATA stage .h5ad.
 
 The downstream R modules read obs columns (batch/sample/labels) with
 rhdf5::h5read, which expects a flat array. anndata writes string columns as
@@ -22,9 +22,12 @@ def validate_file(path):
                     f"string-arrays for rhdf5::h5read): {', '.join(bad)}")
     except Exception as e:
         print(f"FAIL\t{path}\t{e}")
-        return
+        return False
     print(f"OK\t{path}")
+    return True
 
 
-for arg in sys.argv[1:]:
-    validate_file(arg)
+# pass iff every file validates; exit non-zero on any failure (omnibenchmark
+# `validate outputs` keys pass/fail off the exit code).
+ok = all([validate_file(arg) for arg in sys.argv[1:]])
+sys.exit(0 if ok else 1)
