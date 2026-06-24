@@ -41,7 +41,7 @@ software_environments:
     name: annotate env
     conda: envs/annotate.yml
   integrate-py:
-    name: Python integration env
+    name: integration env
     conda: envs/integrate-py.yml
 
 
@@ -234,22 +234,21 @@ stages:
             random_seed: 42
             flavor: "umap"
 
-  # TODO: re-enable once metrics R module reads the bundled neighbors.h5
-  # - id: GRAPH-M
-  #   inputs:
-  #     - distances_h5
-  #     - rawdata_clusters_truth
-  #   outputs:
-  #     - id: graph_metrics
-  #       path: "{dataset}_graph_metrics.json"
-  #   modules:
-  #     - id: nn-metrics-r
-  #       name: "Graph quality metrics in R"
-  #       software_environment: "metrics"
-  #       repository:
-  #         url: https://github.com/omni-scrna/metrics
-  #         commit: 0d0050e
-  #         entrypoint: graph-r
+  - id: GRAPH-M
+    inputs:
+      - neighbors_h5
+      - rawdata_clusters_truth
+    outputs:
+      - id: graph_metrics
+        path: "{dataset}_graph_metrics.json"
+    modules:
+      - id: nn-metrics-r
+        name: "Graph metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: harmonize-argparsing
+          entrypoint: graph-r
 
   # TODO: update branch and convert scanpy clustering to new param handling
   #- id: CLUST
