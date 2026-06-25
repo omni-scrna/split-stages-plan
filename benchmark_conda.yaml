@@ -256,7 +256,8 @@ stages:
     outputs:
       - id: clusters_tsv
         path: "{dataset}_clusters.tsv"
-    #modules: TODO: reconnect
+    modules: 
+    # TODO: reconnect scanpy clustering module below
     #  - id: cl-scanpy
     #    name: "scanpy Leiden clustering"
     #    software_environment: "scanpy"
