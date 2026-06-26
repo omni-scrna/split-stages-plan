@@ -11,7 +11,7 @@ dependencies:
   - numpy *
   - polars *
   - r-base >=4.5,<4.6.0
-  - r-argparse *
+  - r-argparser *
   - r-jsonlite *
   - r-data.table *
   - r-igraph *
@@ -20,6 +20,7 @@ dependencies:
   - bioconductor-hdf5array *
   - bioconductor-rhdf5 *
   - bioconductor-poem *
+  - imagemagick=7.1.2_25 # o/w poem does not load
   - r-pdist=1.2.1
   - r-aricode=1.0.3 
   - r-data.table *

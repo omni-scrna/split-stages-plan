@@ -41,28 +41,28 @@ software_environments:
     name: annotate env
     conda: envs/annotate.yml
   integrate-py:
-    name: Python integration env
+    name: integration env
     conda: envs/integrate-py.yml
 
 
 stages:
-  - id: one-data
+  - id: DATA
     outputs:
-      - id: rawdata.h5ad
+      - id: rawdata_h5ad
         path: "{dataset}.h5ad"
-      - id: rawdata.clusters_truth
+      - id: rawdata_clusters_truth
         path: "{dataset}.clusters_truth.tsv"
-      - id: rawdata.clusters_truth_num
+      - id: rawdata_clusters_truth_num
         path: "{dataset}.clusters_truth_num.txt"
-      - id: properties.info
+      - id: properties_info
         path: "{dataset}_properties.yaml"
     modules:
-      - id: datasets
+      - id: data
         name: "R-based dataset downloads"
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 3a582a
+          commit: harmonize-argparsing
         parameters:
           #- dataset_name: "be1-subset"
           #  batch_var: Sample
@@ -77,291 +77,281 @@ stages:
           #  labels_var: cell_line
           #  sample_var: null
 
-  - id: two-filter
+  - id: FILT
     inputs:
-      - rawdata.h5ad
-      - properties.info
+      - rawdata_h5ad
+      - properties_info
     outputs:
-      - id: filtered.cellids
+      - id: filtered_cellids
         path: "{dataset}_cellids.txt.gz"
     modules:
-      - id: filter-scrapper
+      - id: fi-scrapper
         name: "scrapper-style filtering"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 19b1ae8
+          commit: harmonize-argparsing
           entrypoint: filter
-      # TODO: rewire these below to handle properties.info arg
-      #- id: filtering-r
-      #  name: "R-based cell-level filters"
-      #  software_environment: "r_conda"
-      #  repository:
-      #    url: https://github.com/omni-scrna/2-filter
-      #    commit: ac74749
-      #  parameters:
-      #    - filter_type: ["manual"]
-      #- id: filtering-py
-      #  name: "Python-based cell-level filters"
-      #  software_environment: "py_conda"
-      #  repository:
-      #    url: https://github.com/omni-scrna/2-filter-py
-      #    commit: "64b89e6"
-      #  parameters:
-      #    - filter_type: ["manual"]
 
-  - id: three-normalize
+  - id: NORM
     inputs:
-      - rawdata.h5ad
-      - filtered.cellids
+      - rawdata_h5ad
+      - filtered_cellids
     outputs:
-      - id: normalized.h5
+      - id: normalized_h5
         path: "{dataset}_normalized.h5"
     modules:
-      #- id: normalization-r
-      #  name: "R-based scRNA-seq normalization methods"
-      #  software_environment: "r_conda"
-      #  repository:
-      #    url: https://github.com/omni-scrna/3-normalize
-      #    commit: b2fb9f3
-      #  parameters:
-      #    - normalization_type: ["seurat_log1pCP10k", "scuttle_geometricSizeFactors"]
-      - id: normalize-scrapper
+      - id: nr-scrapper
         name: "scrapper-based normalization"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 19b1ae8
+          commit: harmonize-argparsing 
           entrypoint: normalize
-      - id: normalization-py
+      - id: nr-scanpy
         name: "Python-based scRNA-seq normalization methods"
         software_environment: "py_conda"
         repository:
-          url: https://github.com/omni-scrna/3-normalize-py
-          commit: 6a95673
+          url: https://github.com/omni-scrna/scanpy
+          commit: harmonize-argparsing
+          entrypoint: normalize
         parameters:
-          - normalization_type: ["scanpy_log1pCP10k"]
+          - flavor: ["log1pCP10k"]
 
-  - id: four-select
+  - id: FEAT
     inputs:
-      - rawdata.h5ad
-      - normalized.h5
-      - filtered.cellids
-      - properties.info
+      - rawdata_h5ad
+      - normalized_h5
+      - filtered_cellids
+      - properties_info
     outputs:
-      - id: normalized_selected.h5
+      - id: normalized_selected_h5
         path: "{dataset}_normalized_selected.h5"
     modules:
-      - id: selection-seurat
-        name: "Seurat-based scRNA-seq gene selection methods"
+      - id: fe-seurat
+        name: "seurat-based gene selection"
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 7d553fb
+          commit: harmonize-argparsing  
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
             number_selected: 2000
-      - id: selection-scrapper
-        name: "Scrapper-based gene selection"
+      - id: fe-scrapper
+        name: "scrapper-based gene selection"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 21463b5
+          commit: harmonize-argparsing
           entrypoint: select
         parameters:
           - number_selected: 2000
-      # - id: selection-py
-      #   name: "Python-based scRNA-seq gene selection methods"
-      #   software_environment: "py_conda"
-      #   repository:
-      #     url: https://github.com/omni-scrna/4-select-py
-      #     commit: "19e5811"
-      #   parameters:
-      #     - selection_type: ["scanpy_hvg", "pearson_residuals"]
-      #       number_selected: 2000
+      - id: fe-scanpy
+        name: "scanpy-based gene selection"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: harmonize-argparsing
+          entrypoint: feat-select
+        parameters:
+          - flavor: ["pearson_residuals", "scanpy_seurat"]
+            number_selected: 2000
 
-  - id: five-pca
+  - id: PCA
     resources:
       cores: 4
     inputs:
-      - normalized_selected.h5
+      - normalized_selected_h5
     outputs:
-      - id: pcas.tsv
+      - id: pcas_tsv
         path: "{dataset}_pcas.tsv"
-      - id: loadings.tsv
+      - id: loadings_tsv
         path: "{dataset}_loadings.tsv"
     modules:
-      - id: pca-scanpy
+      - id: pc-scanpy
         name: "scanpy PCA"
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 83f0d49
+          commit: harmonize-argparsing  
           entrypoint: pca
         parameters:
           - solver: [arpack, randomized]
             n_components: 50
             random_seed: 42
-      - id: pca-scrapper
+      - id: pc-scrapper
         name: "scrapper PCA"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 21463b5
+          commit: harmonize-argparsing
           entrypoint: pca
         parameters:
           - solver: [exact, irlba, random]
             n_components: 50
             random_seed: 42
 
-  - id: six-embedding-metrics
+  - id: EMBED-M
     inputs:
-      - pcas.tsv
-      - rawdata.clusters_truth
+      - pcas_tsv
+      - rawdata_clusters_truth
     outputs:
       - id: embedding_metrics
         path: "{dataset}_embedding_metrics.json"
     modules:
-      - id: embedding-metrics-py
-        name: "Embedding quality metrics in python"
+      - id: em-metrics-py
+        name: "Embedding metrics in python"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e
+          commit: harmonize-argparsing
           entrypoint: embedding-py
-      - id: embedding-metrics-r
-        name: "Embedding quality metrics in R"
+      - id: em-metrics-r
+        name: "Embedding metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e
+          commit: harmonize-argparsing
           entrypoint: embedding-r
 
-  - id: nngraph
+  - id: NNG
     inputs:
-      - pcas.tsv
+      - pcas_tsv
     outputs:
-      - id: neighbors.h5
+      - id: neighbors_h5
         path: "{dataset}_neighbors.h5"
     modules:
-      - id: nngraph-scanpy
+      - id: nn-scanpy
         name: "scanpy KNN graph"
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 88c668d
+          commit: harmonize-argparsing
           entrypoint: knn
         parameters:
           - n_neighbors: 15
             random_seed: 42
             flavor: "umap"
 
-  # TODO: re-enable once metrics R module reads the bundled neighbors.h5
-  # - id: graph-metrics
-  #   inputs:
-  #     - distances.h5
-  #     - rawdata.clusters_truth
-  #   outputs:
-  #     - id: graph_metrics
-  #       path: "{dataset}_graph_metrics.json"
-  #   modules:
-  #     - id: graph-metrics-r
-  #       name: "Graph quality metrics in R"
-  #       software_environment: "metrics"
-  #       repository:
-  #         url: https://github.com/omni-scrna/metrics
-  #         commit: 0d0050e
-  #         entrypoint: graph-r
-
-  - id: cluster
+  - id: GRAPH-M
     inputs:
-      - neighbors.h5
+      - neighbors_h5
+      - rawdata_clusters_truth
     outputs:
-      - id: clusters.tsv
-        path: "{dataset}_clusters.tsv"
+      - id: graph_metrics
+        path: "{dataset}_graph_metrics.json"
     modules:
-      - id: cluster-scanpy
-        name: "scanpy Leiden clustering"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: graphs
-          entrypoint: cluster
-        parameters:
-          - resolution: [0.5, 1.0]
-            random_seed: 42
-
-  - id: cluster-metrics
-    inputs:
-      - clusters.tsv
-      - rawdata.clusters_truth
-    outputs:
-      - id: cluster_metrics
-        path: "{dataset}_cluster_metrics.json"
-    modules:
-      - id: cluster-metrics-r
-        name: "Partition metrics in R"
+      - id: nn-metrics-r
+        name: "Graph metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 0d0050e
-          entrypoint: cluster-r
+          commit: harmonize-argparsing
+          entrypoint: graph-r
 
-  - id: seven-integrate
+  - id: CLUST
     inputs:
-      - pcas.tsv
-      - loadings.tsv
-      - normalized_selected.h5
-      - rawdata.h5ad
-      - properties.info
+      - neighbors_h5
     outputs:
-      - id: corrected.tsv
+      - id: clusters_tsv
+        path: "{dataset}_clusters.tsv"
+    modules: 
+    # TODO: reconnect scanpy clustering module below
+    #  - id: cl-scanpy
+    #    name: "scanpy Leiden clustering"
+    #    software_environment: "scanpy"
+    #    repository:
+    #      url: https://github.com/omni-scrna/scanpy
+    #      commit: graphs  
+    #      entrypoint: cluster
+    #    parameters:
+    #      - resolution: [0.5, 1.0]
+    #        random_seed: 42
+      - id: cl-seurat
+        name: "Seurat clustering"
+        software_environment: "seurat"
+        repository:
+          url: https://github.com/omni-scrna/seurat
+          commit: harmonize-argparsing
+          entrypoint: cluster
+        parameters:
+          - modularity_algorithm: ["louvain_original"]
+            resolution: [0.5, 1.0]
+            random_seed: 42
+          #- modularity_algorithm: ["louvain_original", "louvain_multilevel_refinement", "slm", "leiden"]
+
+  # TODO: update branch and convert clustering metrics R to new param handling
+  #- id: CLUST-M
+  #  inputs:
+  #    - clusters_tsv
+  #    - rawdata_clusters_truth
+  #  outputs:
+  #    - id: cluster_metrics
+  #      path: "{dataset}_cluster_metrics.json"
+  #  modules:
+  #    - id: cl-metrics-r
+  #      name: "Partition metrics in R"
+  #      software_environment: "metrics"
+  #      repository:
+  #        url: https://github.com/omni-scrna/metrics
+  #        commit: 0d0050e  
+  #        entrypoint: cluster-r
+
+  - id: INTG8
+    inputs:
+      - pcas_tsv
+      - loadings_tsv
+      - normalized_selected_h5
+      - rawdata_h5ad
+      - properties_info
+    outputs:
+      - id: corrected_tsv
         path: "{dataset}_corrected.tsv"
     modules:
-      - id: integration-harmony
+      - id: in-harmony
         name: "Harmony batch correction"
         software_environment: "integrate"
         repository:
           url: https://github.com/omni-scrna/7-integrate
-          commit: 108fa8c
+          commit: harmonize-argparsing
           entrypoint: harmony-r
         parameters:
           - theta: [0.1, 2]
-      - id: integration-seurat
+      - id: in-seurat
         name: "Seurat IntegrateLayers batch correction"
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 7d553fb
+          commit: harmonize-argparsing 
           entrypoint: integrate
         parameters:
           - method: [rpca]
             k_anchor: [5, 20]
-      - id: integration-scanorama
+      - id: in-scanorama
         name: "Scanorama batch correction"
         software_environment: "integrate-py"
         repository:
           url: https://github.com/omni-scrna/7-integrate-py
-          commit: 7bb03ac
+          commit: harmonize-argparsing
           entrypoint: scanorama
         parameters:
           - knn: [20]
             sigma: [15]
 
-  - id: nine-annotate
+  - id: ANNO
     inputs:
-    - normalized_selected.h5
+    - normalized_selected_h5
     outputs:
-    - id: annotations
+    - id: annotations_tsv
       path: '{dataset}_annotations.tsv'
     modules:
-    - id: annotation-singler
+    - id: an-singler
       name: singler annotation
       software_environment: annotate
       repository:
         url: https://github.com/omni-scrna/9-annotate
-        commit: ba5bfcf
+        commit: harmonize-argparsing  
       parameters:
         - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 

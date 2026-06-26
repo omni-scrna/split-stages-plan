@@ -10,8 +10,8 @@ dependencies:
   - r-seurat>=5.0.0
   - bioconductor-dropletutils
   - bioconductor-geoquery
-  - bioconductor-singlecellmultimodal
   - bioconductor-anndatar
+  - bioconductor-experimenthub
   - bioconductor-scrapper
   - bioconductor-scuttle
   - r-argparser
