@@ -60,10 +60,14 @@ jobs:
           path: out_ci/.snakemake/conda
           key: snakemake-conda-${{ runner.os }}-${{ hashFiles('envs/*.yml', 'envs/*.yaml', 'ci/trim-plan.sh') }}
 
+      # --cores 1: run modules serially so peak memory is one module at a time.
+      # With --cores 4, up to 4 heavy modules (seurat/scvi/scanorama/R metrics)
+      # are resident at once and OOM the 16 GB runner. Bump back up once the
+      # memory-hungry module is identified/fixed.
       - name: Run trimmed benchmark on fixture
         run: |
           pixi run -e plan ob run benchmark_ci.yaml \
-            --unpinned --out-dir out_ci --cores 4
+            --unpinned --out-dir out_ci --cores 1
 
       - name: Summarize outputs
         if: always()
