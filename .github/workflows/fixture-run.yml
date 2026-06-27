@@ -36,8 +36,26 @@ jobs:
 
       # Cache the per-module conda envs snakemake builds (the slow part).
       # Keyed on the env specs + the omni-data pin so it invalidates on change.
-      - name: Cache module conda envs
-        uses: actions/cache@v4
+      # Restore-only: we save explicitly after the env build below, so the
+      # built envs persist even if the run step later OOMs (a host kill skips
+      # the implicit post-cache save).
+      - name: Restore module conda envs
+        id: conda-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: out_ci/.snakemake/conda
+          key: snakemake-conda-${{ runner.os }}-${{ hashFiles('envs/*.yml', 'envs/*.yaml', 'ci/trim-plan.sh') }}
+
+      # Build the per-module conda envs without running any module. Isolates an
+      # env-build OOM from a module OOM, and gives us a cache to save.
+      - name: Build module conda envs
+        run: |
+          pixi run -e plan ob run benchmark_ci.yaml \
+            --unpinned --out-dir out_ci --cores 4 -- --conda-create-envs-only
+
+      - name: Save module conda envs
+        if: always() && steps.conda-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
         with:
           path: out_ci/.snakemake/conda
           key: snakemake-conda-${{ runner.os }}-${{ hashFiles('envs/*.yml', 'envs/*.yaml', 'ci/trim-plan.sh') }}
