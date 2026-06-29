@@ -45,7 +45,7 @@ jobs:
       - name: Run trimmed benchmark on fixture
         run: |
           pixi run -e plan ob run benchmark_ci.yaml \
-            --unpinned --out-dir out_ci --cores 4
+            --unpinned --out-dir out_ci --cores 1
 
       - name: Summarize outputs
         if: always()
