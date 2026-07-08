@@ -82,6 +82,12 @@ jobs:
         run: mkdir -p "$OB_OUT_DIR"
 
       - name: Run full benchmark (${{ inputs.cores || '20' }} cores)
+        env:
+          # Credentials for the S3 remote (rgw.science-it.uzh.ch) configured in
+          # benchmark_conda.yaml. Required by --use-remote-storage; set these as
+          # repo/org Actions secrets.
+          OB_STORAGE_S3_ACCESS_KEY: ${{ secrets.OB_STORAGE_S3_ACCESS_KEY }}
+          OB_STORAGE_S3_SECRET_KEY: ${{ secrets.OB_STORAGE_S3_SECRET_KEY }}
         run: |
           pixi run -e plan ob run benchmark_conda.yaml \
-            --unpinned --out-dir "$OB_OUT_DIR" --cores "${{ inputs.cores || '20' }}" -k
+            --unpinned --use-remote-storage --out-dir "$OB_OUT_DIR" --cores "${{ inputs.cores || '20' }}" -k
