@@ -3,7 +3,7 @@
 
 Cells are subsampled (stratified across `Sample` so every category survives);
 *all genes are kept* so no downstream module can miss a gene/var it expects.
-Outputs the same three files the `one-data` stage declares, into fixtures/1-data/:
+Outputs the same three files the `DATA` stage declares, into fixtures/DATA/:
     be1.h5ad, be1.clusters_truth.tsv, be1.clusters_truth_num.txt
 
 Run with an env that has anndata, e.g.:
@@ -17,14 +17,17 @@ import h5py
 import numpy as np
 import pandas as pd
 
-SRC_H5AD = "out/one-data/datasets/.3d6ce691/datasets.h5ad"
-SRC_TRUTH = "out/one-data/datasets/.3d6ce691/datasets.clusters_truth.tsv"
-OUT_DIR = "fixtures/1-data"
-# Cells kept per Sample. Seurat RPCA integration runs FindIntegrationAnchors
-# with dims = 1:30 *per batch layer* and errors if any layer has fewer cells
-# than max(dims). Filtering drops ~25-30% of cells, so keep enough per Sample
-# that the smallest layer stays comfortably above 30 post-filter.
-N_PER_GROUP = 60
+SRC_H5AD = "out/DATA/datasets/.3d6ce691/datasets.h5ad"
+SRC_TRUTH = "out/DATA/datasets/.3d6ce691/datasets.clusters_truth.tsv"
+OUT_DIR = "fixtures/DATA"
+# Cells kept per Sample. Seurat RPCA integration integrates on the precomputed
+# PCA (n_components=50) and errors if any *batch layer* has fewer cells than the
+# dim count -- "At least one layer has fewer cells than dimensions specified".
+# So every Sample must clear 50 cells *after* filtering. Retention is highly
+# uneven: cell lines keep ~70-100%, but PBMC keeps only ~28% (60 -> 17), so the
+# per-Sample cap has to be sized off that worst case: 50 / 0.28 ~= 180, plus
+# margin. 250 lands the smallest layer around ~70 post-filter.
+N_PER_GROUP = 250
 STRATIFY = "Sample"
 SEED = 0
 
