@@ -146,6 +146,9 @@ stages:
       - id: fe-seurat
         name: "seurat-based gene selection"
         software_environment: "seurat"
+        exclude:
+          - d-pca
+          - d-integration
         repository:
           url: https://github.com/omni-scrna/seurat
           commit: ccb7018
@@ -156,6 +159,9 @@ stages:
       - id: fe-scrapper
         name: "scrapper-based gene selection"
         software_environment: "scrapper"
+        exclude:
+          - d-pca
+          - d-integration
         repository:
           url: https://github.com/omni-scrna/scrapper
           commit: 18843a7
@@ -165,6 +171,9 @@ stages:
       - id: fe-scanpy
         name: "scanpy-based gene selection"
         software_environment: "scanpy"
+        exclude:
+          - d-pca
+          - d-integration
         repository:
           url: https://github.com/omni-scrna/scanpy
           commit: 53eb292
@@ -187,6 +196,9 @@ stages:
       - id: pc-scanpy
         name: "scanpy PCA"
         software_environment: "scanpy"
+        exclude:
+          - d-feat-sel
+          - d-integration
         repository:
           url: https://github.com/omni-scrna/scanpy
           commit: 53eb292
@@ -198,6 +210,9 @@ stages:
       - id: pc-scrapper
         name: "scrapper PCA"
         software_environment: "scrapper"
+        exclude:
+          - d-feat-sel
+          - d-integration
         repository:
           url: https://github.com/omni-scrna/scrapper
           commit: 18843a7
@@ -334,6 +349,9 @@ stages:
       - id: in-harmony
         name: "Harmony batch correction"
         software_environment: "integrate"
+        exclude:
+          - d-pca
+          - d-integration
         repository:
           url: https://github.com/omni-scrna/7-integrate
           commit: d42312a
@@ -343,6 +361,9 @@ stages:
       - id: in-seurat
         name: "Seurat IntegrateLayers batch correction"
         software_environment: "seurat"
+        exclude:
+          - d-pca
+          - d-integration
         repository:
           url: https://github.com/omni-scrna/seurat
           commit: ccb7018
@@ -353,6 +374,9 @@ stages:
       - id: in-scanorama
         name: "Scanorama batch correction"
         software_environment: "integrate-py"
+        exclude:
+          - d-pca
+          - d-integration
         repository:
           url: https://github.com/omni-scrna/7-integrate-py
           commit: 73e3340
@@ -368,12 +392,14 @@ stages:
     - id: annotations_tsv
       path: '{dataset}_annotations.tsv'
     modules:
-    - id: an-singler
-      name: singler annotation
-      software_environment: annotate
-      repository:
-        url: https://github.com/omni-scrna/9-annotate
-        commit: 1cf58ac
-      parameters:
-        - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
-
+      - id: an-singler
+        name: singler annotation
+        software_environment: annotate
+        #exclude:
+        #  - d-pca
+        #  - d-integration
+        repository:
+          url: https://github.com/omni-scrna/9-annotate
+          commit: 1cf58ac
+        parameters:
+          - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
