@@ -28,5 +28,6 @@ dependencies:
   - bioconductor-rhdf5 *
   - r-yaml *
   - pip
+  - pyyaml *
   - pip:
     - scib-metrics

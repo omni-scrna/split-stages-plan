@@ -352,6 +352,7 @@ stages:
       - rawdata_clusters_truth
       - rawdata_h5ad
       - properties_info
+      - pcas_tsv
     outputs:
       - id: integration_metrics
         path: "{dataset}_integration_metrics.json"
@@ -361,18 +362,20 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 648300a
+          commit: cb85f4e
           entrypoint: integration-r
         parameters:
           - k: 20          # knn size for CellMixS cms/entropy/isi (evalIntegration)
             n_dim: 10      # corrected-embedding dims used as the CellMixS subspace
             cell_min: 10   # min cells per batch for cms's Anderson-Darling test
+            ldf_k: 75      # knn size for CellMixS ldfDiff (matches ldfDiff's own default)
+            ldf_n_dim: 20  # pre/post dims used for ldfDiff's LDF subspace (matches ldfDiff's own default)
       - id: in-metrics-py
         name: "Integration metrics in python (scib-metrics)"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 648300a  # TODO: bump once the integration-py commit is pushed
+          commit: cb85f4e
           entrypoint: integration-py
         parameters:
           - n_neighbors: 90  # knn graph size for clisi_knn (pynndescent)
@@ -390,7 +393,7 @@ stages:
       software_environment: annotate
       repository:
         url: https://github.com/omni-scrna/9-annotate
-        commit: 1cf58ac
+        commit: 51dddbb
       parameters:
         - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 
