@@ -362,3 +362,18 @@ stages:
       parameters:
         - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 
+  - id: ANNO-M
+    inputs:
+      - annotations_tsv
+      - rawdata_clusters_truth
+    outputs:
+      - id: annotation_metrics
+        path: "{dataset}_annotation_metrics.json"
+    modules:
+      - id: an-metrics-r
+        name: "Annotation metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: 838895c
+          entrypoint: annotation-r
