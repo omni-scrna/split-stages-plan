@@ -361,7 +361,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 838895c
+          commit: 648300a
           entrypoint: integration-r
 
   - id: ANNO
