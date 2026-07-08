@@ -57,25 +57,40 @@ stages:
       - id: properties_info
         path: "{dataset}_properties.yaml"
     modules:
-      - id: data
-        name: "R-based dataset downloads"
+      - id: d-integration 
+        name: "R-based dataset downloads (integration collection)"
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
           commit: 14c5ddd
         parameters:
-          #- dataset_name: "be1-subset"
-          #  batch_var: Sample
-          #  labels_var: Sample
-          #  sample_var: Sample
           - dataset_name: "be1"
             batch_var: Sample
             labels_var: Sample
             sample_var: Sample
-          #- dataset_name: "sc-mix"
-          #  batch_var: null
-          #  labels_var: cell_line
-          #  sample_var: null
+      - id: d-pca
+        name: "R-based dataset downloads (PCA collection)"
+        software_environment: r_conda
+        repository:
+          url: https://github.com/omni-scrna/1-data
+          commit: 14c5ddd
+        parameters:
+          - dataset_name: "sc-mix"
+            batch_var: null
+            labels_var: cell_line
+            sample_var: null
+      - id: d-feat-sel
+        name: "R-based dataset downloads (feature selection collection)"
+        software_environment: r_conda
+        repository:
+          url: https://github.com/omni-scrna/1-data
+          commit: 14c5ddd
+        parameters:
+          - dataset_name: "be1-subset"
+            batch_var: Sample
+            labels_var: Sample
+            sample_var: Sample
+
 
   - id: FILT
     inputs:
