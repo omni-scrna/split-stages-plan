@@ -10,6 +10,12 @@ api_version: "0.4.0"
 provenance:
   canonical_url: https://raw.githubusercontent.com/omni-scrna/split-stages-plan/refs/heads/main/benchmark_conda.yaml
 
+# Remote artifact storage
+storage:
+  api: S3
+  endpoint: https://omnibenchmark.mls.uzh.ch
+  bucket_name: split-stages-plan
+
 # The default software environment for this benchmark.
 # One of: apptainer, conda, envmodules.
 software_backend: "conda"
