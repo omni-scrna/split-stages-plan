@@ -161,6 +161,7 @@ stages:
         exclude:
           - d-pca
           - d-integration
+          - d-annotation
         repository:
           url: https://github.com/omni-scrna/seurat
           commit: ccb7018
@@ -174,6 +175,7 @@ stages:
         exclude:
           - d-pca
           - d-integration
+          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
           commit: 18843a7
@@ -186,6 +188,7 @@ stages:
         exclude:
           - d-pca
           - d-integration
+          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scanpy
           commit: 53eb292
@@ -211,6 +214,7 @@ stages:
         exclude:
           - d-feat-sel
           - d-integration
+          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scanpy
           commit: 53eb292
@@ -225,6 +229,7 @@ stages:
         exclude:
           - d-feat-sel
           - d-integration
+          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
           commit: 18843a7
@@ -375,7 +380,8 @@ stages:
         software_environment: "integrate"
         exclude:
           - d-pca
-          - d-integration
+          - d-annotation
+          - d-feat-sel
         repository:
           url: https://github.com/omni-scrna/7-integrate
           commit: d42312a
@@ -387,7 +393,8 @@ stages:
         software_environment: "seurat"
         exclude:
           - d-pca
-          - d-integration
+          - d-annotation
+          - d-feat-sel
         repository:
           url: https://github.com/omni-scrna/seurat
           commit: ccb7018
@@ -400,6 +407,7 @@ stages:
         software_environment: "integrate-py"
         exclude:
           - d-pca
+          - d-annotation
           - d-integration
         repository:
           url: https://github.com/omni-scrna/7-integrate-py
