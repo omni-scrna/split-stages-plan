@@ -102,8 +102,6 @@ stages:
             labels_var: celltype
             sample_var: species
 
-
-
   - id: FILT
     inputs:
       - rawdata_h5ad
@@ -247,20 +245,21 @@ stages:
       - id: embedding_metrics
         path: "{dataset}_embedding_metrics.json"
     modules:
-      - id: em-metrics-py
-        name: "Embedding metrics in python"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: 646f1e4
-          entrypoint: embedding-py
       - id: em-metrics-r
         name: "Embedding metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 646f1e4
+          commit: main
           entrypoint: embedding-r
+      #- id: em-metrics-py
+      #  name: "Embedding metrics in python"
+      #  software_environment: "metrics"
+      #  repository:
+      #    url: https://github.com/omni-scrna/metrics
+      #    commit: main 
+      #    entrypoint: embedding-py
+
 
   - id: NNG
     inputs:
