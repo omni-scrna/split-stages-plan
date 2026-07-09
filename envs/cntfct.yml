@@ -1,0 +1,22 @@
+name: count-factor
+channels:
+- conda-forge
+- bioconda
+- nodefaults
+dependencies:
+- bioconductor-newwave >=1.20.0,<2
+- bioconductor-rhdf5
+- bioconductor-hdf5array
+- bioconductor-rhdf5lib >=1.32.0,<2
+- conda-forge::datatable >=1.1.0,<2
+- conda-forge::yaml >=0.2.5,<0.3
+- bioconductor-delayedarray >=0.36.0,<0.37
+- conda-forge::r-optparse >=1.8.2,<2
+- r-base >=4.5.3,<4.6
+- bioconda::bioconductor-anndatar >=1.0.2,<2
+- bioconductor-singlecellexperiment
+- r-argparser
+- r-stringr
+- r-yaml
+- r-data.table 
+

@@ -451,3 +451,23 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: integration-metrics
           entrypoint: annotation-r
+  - id: CNTFCT
+    resources:
+      cores: 4
+    inputs:
+    - normalized_selected_h5
+    - rawdata_h5ad
+    - filtered_cellids
+    outputs:
+    - id: reduced_dims_tsv
+      path: '{dataset}_reduced_dims.tsv'
+    modules:
+    - id: cntfct
+      name: count-factor
+      software_environment: count-factor
+      repository:
+        url: https://github.com/omni-scrna/count-factor
+        commit: 57096ed
+      parameters:
+      - n_dim: 2
+        random_seed: 42
