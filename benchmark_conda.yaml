@@ -49,6 +49,9 @@ software_environments:
   integrate-py:
     name: integration env
     conda: envs/integrate-py.yml
+  count-factor:
+    name: count-factor
+    conda: envs/cntfct.yml
 
 
 stages:
