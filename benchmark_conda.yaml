@@ -90,6 +90,18 @@ stages:
             batch_var: Sample
             labels_var: Sample
             sample_var: Sample
+      - id: d-annotation
+        name: "R-based dataset downloads (cell type annotation collection)"
+        software_environment: r_conda
+        repository:
+          url: https://github.com/omni-scrna/1-data
+          commit: cell-ontology
+        parameters:
+          - dataset_name: "cb"
+            batch_var: Sample
+            labels_var: Sample
+            sample_var: Sample
+
 
 
   - id: FILT
