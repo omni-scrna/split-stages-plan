@@ -6,6 +6,7 @@ dependencies:
   - python=3.11
   - scanpy
   - pandas
+  - polars
   # stage 3
   - scipy
   - h5py
