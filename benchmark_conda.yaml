@@ -119,10 +119,10 @@ stages:
         software_environment: "py_conda"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 53eb292
+          commit: 997b888
           entrypoint: normalize
         parameters:
-          - flavor: ["log1pCP10k"]
+          - flavor: ["log1pCP10k", "analyticalPearsonResiduals"]
 
   - id: FEAT
     inputs:
