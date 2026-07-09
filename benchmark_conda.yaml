@@ -376,5 +376,5 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: cb85f4e
+          commit: annotation-cl-ontology
           entrypoint: annotation-r
