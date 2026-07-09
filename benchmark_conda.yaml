@@ -57,17 +57,21 @@ stages:
       - id: properties_info
         path: "{dataset}_properties.yaml"
     modules:
-      - id: d-integration 
+      - id: d-integration
         name: "R-based dataset downloads (integration collection)"
         software_environment: r_conda
         repository:
-          url: https://github.com/omni-scrna/1-data
-          commit: 14c5ddd
+          url: /home/jiayiwang/omni-scrna/1-data
+          commit: integration-datasets
         parameters:
           - dataset_name: "be1"
             batch_var: Sample
             labels_var: clusters.truth
             sample_var: Sample
+          - dataset_name: "pancreas"
+            batch_var: study
+            labels_var: clusters.truth
+            sample_var: study
       - id: d-pca
         name: "R-based dataset downloads (PCA collection)"
         software_environment: r_conda
