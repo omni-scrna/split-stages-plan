@@ -160,10 +160,6 @@ stages:
       - id: fe-seurat
         name: "seurat-based gene selection"
         software_environment: "seurat"
-        exclude:
-          - d-pca
-          - d-integration
-          - d-annotation
         repository:
           url: https://github.com/omni-scrna/seurat
           commit: ccb7018
@@ -174,10 +170,6 @@ stages:
       - id: fe-scrapper
         name: "scrapper-based gene selection"
         software_environment: "scrapper"
-        exclude:
-          - d-pca
-          - d-integration
-          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
           commit: 18843a7
@@ -187,10 +179,6 @@ stages:
       - id: fe-scanpy
         name: "scanpy-based gene selection"
         software_environment: "scanpy"
-        exclude:
-          - d-pca
-          - d-integration
-          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scanpy
           commit: 53eb292
@@ -215,7 +203,6 @@ stages:
         software_environment: "scanpy"
         exclude:
           - d-feat-sel
-          - d-integration
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/scanpy
@@ -230,7 +217,6 @@ stages:
         software_environment: "scrapper"
         exclude:
           - d-feat-sel
-          - d-integration
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
