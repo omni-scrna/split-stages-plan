@@ -237,28 +237,28 @@ stages:
             n_components: 50
             random_seed: 42
 
-  - id: EMBED-M
-    inputs:
-      - pcas_tsv
-      - rawdata_clusters_truth
-    outputs:
-      - id: embedding_metrics
-        path: "{dataset}_embedding_metrics.json"
-    modules:
-      - id: em-metrics-r
-        name: "Embedding metrics in R"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: main
-          entrypoint: embedding-r
-      #- id: em-metrics-py
-      #  name: "Embedding metrics in python"
-      #  software_environment: "metrics"
-      #  repository:
-      #    url: https://github.com/omni-scrna/metrics
-      #    commit: main 
-      #    entrypoint: embedding-py
+  #- id: EMBED-M
+  #  inputs:
+  #    - pcas_tsv
+  #    - rawdata_clusters_truth
+  #  outputs:
+  #    - id: embedding_metrics
+  #      path: "{dataset}_embedding_metrics.json"
+  #  modules:
+  #    - id: em-metrics-r
+  #      name: "Embedding metrics in R"
+  #      software_environment: "metrics"
+  #      repository:
+  #        url: https://github.com/omni-scrna/metrics
+  #        commit: main
+  #        entrypoint: embedding-r
+  #    #- id: em-metrics-py
+  #    #  name: "Embedding metrics in python"
+  #    #  software_environment: "metrics"
+  #    #  repository:
+  #    #    url: https://github.com/omni-scrna/metrics
+  #    #    commit: main 
+  #    #    entrypoint: embedding-py
 
 
   - id: NNG
@@ -280,21 +280,21 @@ stages:
             random_seed: 42
             flavor: "umap"
 
-  - id: GRAPH-M
-    inputs:
-      - neighbors_h5
-      - rawdata_clusters_truth
-    outputs:
-      - id: graph_metrics
-        path: "{dataset}_graph_metrics.json"
-    modules:
-      - id: nn-metrics-r
-        name: "Graph metrics in R"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: 646f1e4
-          entrypoint: graph-r
+  #- id: GRAPH-M
+  #  inputs:
+  #    - neighbors_h5
+  #    - rawdata_clusters_truth
+  #   outputs:
+  #    - id: graph_metrics
+  #      path: "{dataset}_graph_metrics.json"
+  #  modules:
+  #    - id: nn-metrics-r
+  #      name: "Graph metrics in R"
+  #      software_environment: "metrics"
+  #      repository:
+  #        url: https://github.com/omni-scrna/metrics
+  #        commit: 646f1e4
+  #        entrypoint: graph-r
 
   - id: CLUST
     inputs:
@@ -347,21 +347,21 @@ stages:
             walktrap_steps: [2, 4]
             random_seed: 42
         
-  - id: CLUST-M
-    inputs:
-      - clusters_tsv
-      - rawdata_clusters_truth
-    outputs:
-      - id: cluster_metrics
-        path: "{dataset}_cluster_metrics.json"
-    modules:
-      - id: cl-metrics-r
-        name: "Partition metrics in R"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: 257c952
-          entrypoint: cluster-r
+  #- id: CLUST-M
+  #  inputs:
+  #    - clusters_tsv
+  #    - rawdata_clusters_truth
+  #  outputs:
+  #    - id: cluster_metrics
+  #      path: "{dataset}_cluster_metrics.json"
+  #  modules:
+  #    - id: cl-metrics-r
+  #      name: "Partition metrics in R"
+  #      software_environment: "metrics"
+  #      repository:
+  #        url: https://github.com/omni-scrna/metrics
+  #        commit: 257c952
+  #        entrypoint: cluster-r
 
   - id: INTG8
     inputs:
@@ -416,23 +416,23 @@ stages:
           - knn: [20]
             sigma: [15]
 
-  - id: INTG8-M
-    inputs:
-      - corrected_tsv
-      - rawdata_clusters_truth
-      - rawdata_h5ad
-      - properties_info
-    outputs:
-      - id: integration_metrics
-        path: "{dataset}_integration_metrics.json"
-    modules:
-      - id: in-metrics-r
-        name: "Integration metrics in R"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: 648300a
-          entrypoint: integration-r
+  #- id: INTG8-M
+  #  inputs:
+  #    - corrected_tsv
+  #    - rawdata_clusters_truth
+  #    - rawdata_h5ad
+  #    - properties_info
+  #  outputs:
+  #    - id: integration_metrics
+  #      path: "{dataset}_integration_metrics.json"
+  #  modules:
+  #    - id: in-metrics-r
+  #      name: "Integration metrics in R"
+  #      software_environment: "metrics"
+  #      repository:
+  #        url: https://github.com/omni-scrna/metrics
+  #        commit: 648300a
+  #        entrypoint: integration-r
 
   - id: NNG-C
     inputs:
