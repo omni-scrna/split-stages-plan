@@ -376,6 +376,44 @@ stages:
           commit: 648300a
           entrypoint: integration-r
 
+  - id: NNG-C
+    inputs:
+      - corrected_tsv
+    outputs:
+      - id: neighbors_corrected_h5
+        path: "{dataset}_neighbors.h5"
+    modules:
+      - id: nn-scanpy-c
+        name: "scanpy KNN graph (corrected embedding)"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: a8cc334
+          entrypoint: knn
+        parameters:
+          - n_neighbors: 15
+            random_seed: 42
+            flavor: "umap"
+
+  - id: CLUST-C
+    inputs:
+      - neighbors_corrected_h5
+    outputs:
+      - id: clusters_corrected_tsv
+        path: "{dataset}_clusters.tsv"
+    modules:
+      - id: cl-scanpy-c
+        name: "scanpy Leiden clustering (corrected embedding)"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: a8cc334
+          entrypoint: cluster
+        parameters:
+          - flavor: ["igraph", "leidenalg"]
+            resolution: [0.5, 1.0]
+            random_seed: 42
+
   - id: ANNO
     inputs:
     - normalized_selected_h5
