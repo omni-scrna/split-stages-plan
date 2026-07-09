@@ -98,9 +98,9 @@ stages:
           commit: cell-ontology
         parameters:
           - dataset_name: "cb"
-            batch_var: Sample
-            labels_var: Sample
-            sample_var: Sample
+            batch_var: species
+            labels_var: celltype
+            sample_var: species
 
 
 
