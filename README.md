@@ -1,6 +1,6 @@
 # split-stages-plan
 
-[![Edit in OBEditor](https://img.shields.io/badge/edit-obeditor-0078d4?style=flat)](https://btraven00.github.io./obeditor/?url=https://github.com/omni-scrna/split-stages-plan/blob/main/benchmark_conda.yaml)
+[![Open in OBEditor](https://img.shields.io/badge/open-obeditor-0078d4?style=flat)](https://omnibenchmark.github.io/obeditor?url=https://github.com/omni-scrna/split-stages-plan/blob/main/benchmark_conda.yaml)
 
 
 This benchmark lays out stages for each step of an scRNA-seq pipeline
