@@ -1,7 +1,7 @@
 name: Fixture run
 
 # Executes a trimmed version of the benchmark (every module, one parameter
-# combo each) on the tiny committed fixture in fixtures/1-data. Proves the
+# combo each) on the tiny committed fixture in fixtures/DATA. Proves the
 # modules still execute and their stage contracts line up, without the 817 MB
 # real dataset.
 
@@ -45,6 +45,11 @@ jobs:
         with:
           path: out_ci/.snakemake/conda
           key: snakemake-conda-${{ runner.os }}-${{ hashFiles('envs/*.yml', 'envs/*.yaml', 'ci/trim-plan.sh') }}
+          # Partial restore on an exact-key miss: snakemake reuses every
+          # hash-named env that still matches and rebuilds only the changed
+          # one(s), instead of re-solving all modules from scratch.
+          restore-keys: |
+            snakemake-conda-${{ runner.os }}-
 
       # Build the per-module conda envs without running any module. Isolates an
       # env-build OOM from a module OOM, and gives us a cache to save.
@@ -63,7 +68,7 @@ jobs:
       - name: Run trimmed benchmark on fixture
         run: |
           pixi run -e plan ob run benchmark_ci.yaml \
-            --unpinned --out-dir out_ci --cores 1
+            --unpinned --out-dir out_ci --cores 4
 
       - name: Summarize outputs
         if: always()

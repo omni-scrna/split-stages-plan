@@ -10,6 +10,12 @@ api_version: "0.4.0"
 provenance:
   canonical_url: https://raw.githubusercontent.com/omni-scrna/split-stages-plan/refs/heads/main/benchmark_conda.yaml
 
+# Remote artifact storage
+storage:
+  api: S3
+  endpoint: https://omnibenchmark.mls.uzh.ch
+  bucket_name: split-stages-plan
+
 # The default software environment for this benchmark.
 # One of: apptainer, conda, envmodules.
 software_backend: "conda"
@@ -288,7 +294,19 @@ stages:
         #    resolution: [0.5, 1.0]
         #    random_seed: 42
         #  #- modularity_algorithm: ["louvain_original", "louvain_multilevel_refinement", "slm", "leiden"]
-
+      - id: cl-scrapper
+        name: "Scrapper clustering"
+        software_environment: "scrapper"
+        repository:
+          url: https://github.com/omni-scrna/scrapper
+          commit: add-clustering
+          entrypoint: cluster
+        parameters:
+          - flavor: ["leiden_modularity", "leiden_cpm", "multilevel", "walktrap"]
+            resolution: [0.5, 1.0]
+            walktrap_steps: [2, 4]
+            random_seed: 42
+        
   - id: CLUST-M
     inputs:
       - clusters_tsv
@@ -381,6 +399,44 @@ stages:
           - n_neighbors: 90  # knn graph size for clisi_knn (pynndescent)
             random_state: 0 # random seed for the pynndescent approximate KNN search
 
+  - id: NNG-C
+    inputs:
+      - corrected_tsv
+    outputs:
+      - id: neighbors_corrected_h5
+        path: "{dataset}_neighbors.h5"
+    modules:
+      - id: nn-scanpy-c
+        name: "scanpy KNN graph (corrected embedding)"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: a8cc334
+          entrypoint: knn
+        parameters:
+          - n_neighbors: 15
+            random_seed: 42
+            flavor: "umap"
+
+  - id: CLUST-C
+    inputs:
+      - neighbors_corrected_h5
+    outputs:
+      - id: clusters_corrected_tsv
+        path: "{dataset}_clusters.tsv"
+    modules:
+      - id: cl-scanpy-c
+        name: "scanpy Leiden clustering (corrected embedding)"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: a8cc334
+          entrypoint: cluster
+        parameters:
+          - flavor: ["igraph", "leidenalg"]
+            resolution: [0.5, 1.0]
+            random_seed: 42
+
   - id: ANNO
     inputs:
     - normalized_selected_h5
@@ -393,7 +449,22 @@ stages:
       software_environment: annotate
       repository:
         url: https://github.com/omni-scrna/9-annotate
-        commit: 51dddbb
+        commit: col_renaming_07_08
       parameters:
         - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 
+  - id: ANNO-M
+    inputs:
+      - annotations_tsv
+      - rawdata_clusters_truth
+    outputs:
+      - id: annotation_metrics
+        path: "{dataset}_annotation_metrics.json"
+    modules:
+      - id: an-metrics-r
+        name: "Annotation metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: integration-metrics
+          entrypoint: annotation-r
