@@ -11,5 +11,8 @@ dependencies:
 - bioconductor-rhdf5 *
 - bioconductor-hdf5array *
 - r-data.table *
-- r-argparser *
+- r-optparse *
 - r-magrittr *
+- r-yaml *
+- r-argparser *
+- bioconductor-glmgampoi >=1.22.0,<2

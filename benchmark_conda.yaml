@@ -123,6 +123,16 @@ stages:
           entrypoint: normalize
         parameters:
           - flavor: ["log1pCP10k"]
+      - id: nr-seurat
+        name: "Seurat-based scRNA-seq normalization methods"
+        software_environment: "seurat"
+        repository:
+          url: https://github.com/omni-scrna/seurat
+          commit: c4cfdf3
+          entrypoint: normalize
+        parameters:
+          - flavor: ["sctransformv2"]
+            random_seed: 42
 
   - id: FEAT
     inputs:
