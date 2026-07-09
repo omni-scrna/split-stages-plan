@@ -318,7 +318,19 @@ stages:
         #    resolution: [0.5, 1.0]
         #    random_seed: 42
         #  #- modularity_algorithm: ["louvain_original", "louvain_multilevel_refinement", "slm", "leiden"]
-
+      - id: cl-scrapper
+        name: "Scrapper clustering"
+        software_environment: "scrapper"
+        repository:
+          url: https://github.com/omni-scrna/scrapper
+          commit: add-clustering
+          entrypoint: cluster
+        parameters:
+          - flavor: ["leiden_modularity", "leiden_cpm", "multilevel", "walktrap"]
+            resolution: [0.5, 1.0]
+            walktrap_steps: [2, 4]
+            random_seed: 42
+        
   - id: CLUST-M
     inputs:
       - clusters_tsv
@@ -385,6 +397,62 @@ stages:
           - knn: [20]
             sigma: [15]
 
+  - id: INTG8-M
+    inputs:
+      - corrected_tsv
+      - rawdata_clusters_truth
+      - rawdata_h5ad
+      - properties_info
+    outputs:
+      - id: integration_metrics
+        path: "{dataset}_integration_metrics.json"
+    modules:
+      - id: in-metrics-r
+        name: "Integration metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: 648300a
+          entrypoint: integration-r
+
+  - id: NNG-C
+    inputs:
+      - corrected_tsv
+    outputs:
+      - id: neighbors_corrected_h5
+        path: "{dataset}_neighbors.h5"
+    modules:
+      - id: nn-scanpy-c
+        name: "scanpy KNN graph (corrected embedding)"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: a8cc334
+          entrypoint: knn
+        parameters:
+          - n_neighbors: 15
+            random_seed: 42
+            flavor: "umap"
+
+  - id: CLUST-C
+    inputs:
+      - neighbors_corrected_h5
+    outputs:
+      - id: clusters_corrected_tsv
+        path: "{dataset}_clusters.tsv"
+    modules:
+      - id: cl-scanpy-c
+        name: "scanpy Leiden clustering (corrected embedding)"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: a8cc334
+          entrypoint: cluster
+        parameters:
+          - flavor: ["igraph", "leidenalg"]
+            resolution: [0.5, 1.0]
+            random_seed: 42
+
   - id: ANNO
     inputs:
     - normalized_selected_h5
@@ -392,14 +460,27 @@ stages:
     - id: annotations_tsv
       path: '{dataset}_annotations.tsv'
     modules:
-      - id: an-singler
-        name: singler annotation
-        software_environment: annotate
-        #exclude:
-        #  - d-pca
-        #  - d-integration
+    - id: an-singler
+      name: singler annotation
+      software_environment: annotate
+      repository:
+        url: https://github.com/omni-scrna/9-annotate
+        commit: col_renaming_07_08
+      parameters:
+        - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
+
+  - id: ANNO-M
+    inputs:
+      - annotations_tsv
+      - rawdata_clusters_truth
+    outputs:
+      - id: annotation_metrics
+        path: "{dataset}_annotation_metrics.json"
+    modules:
+      - id: an-metrics-r
+        name: "Annotation metrics in R"
+        software_environment: "metrics"
         repository:
-          url: https://github.com/omni-scrna/9-annotate
-          commit: 1cf58ac
-        parameters:
-          - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
+          url: https://github.com/omni-scrna/metrics
+          commit: integration-metrics
+          entrypoint: annotation-r

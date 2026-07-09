@@ -24,3 +24,7 @@ dependencies:
   - r-pdist=1.2.1
   - r-aricode=1.0.3 
   - r-data.table *
+  - r-mlmetrics *
+  - bioconductor-cellmixs *
+  - bioconductor-rhdf5 *
+  - r-yaml *
