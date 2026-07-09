@@ -288,7 +288,19 @@ stages:
         #    resolution: [0.5, 1.0]
         #    random_seed: 42
         #  #- modularity_algorithm: ["louvain_original", "louvain_multilevel_refinement", "slm", "leiden"]
-
+      - id: cl-scrapper
+        name: "Scrapper clustering"
+        software_environment: "scrapper"
+        repository:
+          url: https://github.com/omni-scrna/scrapper
+          commit: add-clustering
+          entrypoint: cluster
+        parameters:
+          - flavor: ["leiden_modularity", "leiden_cpm", "multilevel", "walktrap"]
+            resolution: [0.5, 1.0]
+            walktrap_steps: [2, 4]
+            random_seed: 42
+        
   - id: CLUST-M
     inputs:
       - clusters_tsv
@@ -346,6 +358,24 @@ stages:
           - knn: [20]
             sigma: [15]
 
+  - id: INTG8-M
+    inputs:
+      - corrected_tsv
+      - rawdata_clusters_truth
+      - rawdata_h5ad
+      - properties_info
+    outputs:
+      - id: integration_metrics
+        path: "{dataset}_integration_metrics.json"
+    modules:
+      - id: in-metrics-r
+        name: "Integration metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: 648300a
+          entrypoint: integration-r
+
   - id: ANNO
     inputs:
     - normalized_selected_h5
@@ -358,7 +388,7 @@ stages:
       software_environment: annotate
       repository:
         url: https://github.com/omni-scrna/9-annotate
-        commit: 1cf58ac
+        commit: col_renaming_07_08
       parameters:
         - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 

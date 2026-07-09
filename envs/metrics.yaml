@@ -26,3 +26,6 @@ dependencies:
   - r-data.table *
   - r-mlmetrics *
   - r-ontologyindex *
+  - bioconductor-cellmixs *
+  - bioconductor-rhdf5 *
+  - r-yaml *
