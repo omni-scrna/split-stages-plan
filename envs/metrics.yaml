@@ -25,3 +25,4 @@ dependencies:
   - r-aricode=1.0.3 
   - r-data.table *
   - r-mlmetrics *
+  - r-ontologyindex *

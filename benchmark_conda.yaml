@@ -366,6 +366,7 @@ stages:
     inputs:
       - annotations_tsv
       - rawdata_clusters_truth
+      - cell_ontology_obo
     outputs:
       - id: annotation_metrics
         path: "{dataset}_annotation_metrics.json"
