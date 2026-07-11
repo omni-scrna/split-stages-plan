@@ -162,7 +162,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: ccb7018
+          commit: reorder-debug
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -397,7 +397,7 @@ stages:
         exclude:
           - d-pca
           - d-annotation
-          - d-integration
+          - d-feat-sel
         repository:
           url: https://github.com/omni-scrna/7-integrate-py
           commit: 73e3340
