@@ -5,10 +5,10 @@ channels:
   - https://repo.prefix.dev/almost-conductor
   - nodefaults
 dependencies:
-  - python >=3.12
+  - python >=3.12,<3.14  # numba (scib-metrics -> pynndescent/umap-learn) has no cp314 wheels yet
   - scikit-learn *
   - h5py *
-  - numpy *
+  - numpy <2.5  # numba (scib-metrics -> pynndescent/umap-learn) has no numpy>=2.5 support yet
   - polars *
   - r-base >=4.5,<4.6.0
   - r-argparser *
@@ -28,3 +28,7 @@ dependencies:
   - bioconductor-cellmixs *
   - bioconductor-rhdf5 *
   - r-yaml *
+  - pip
+  - pyyaml *
+  - pip:
+    - scib-metrics
