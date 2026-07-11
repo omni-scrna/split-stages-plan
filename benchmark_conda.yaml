@@ -394,7 +394,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: ff497f1
+          commit: integration-metrics
           entrypoint: integration-py
         parameters:
           - n_neighbors: 90  # knn graph size for clisi_knn (pynndescent)
