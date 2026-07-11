@@ -381,7 +381,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: ff497f1
+          commit: integration-metrics
           entrypoint: integration-r
         parameters:
           - k: 20          # knn size for CellMixS cms/entropy/isi (evalIntegration)
