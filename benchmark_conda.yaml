@@ -66,25 +66,54 @@ stages:
       - id: properties_info
         path: "{dataset}_properties.yaml"
     modules:
-      - id: data
-        name: "R-based dataset downloads"
+      - id: d-integration
+        name: "R-based dataset downloads (integration collection)"
+        software_environment: r_conda
+        repository:
+          url: https://github.com/omni-scrna/1-data
+          commit: dd08c17
+        parameters:
+          - dataset_name: "be1"
+            batch_var: Sample
+            labels_var: clusters.truth
+            sample_var: Sample
+          - dataset_name: "pancreas"
+            batch_var: study
+            labels_var: clusters.truth
+            sample_var: study
+      - id: d-pca
+        name: "R-based dataset downloads (PCA collection)"
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
           commit: 14c5ddd
         parameters:
-          #- dataset_name: "be1-subset"
-          #  batch_var: Sample
-          #  labels_var: Sample
-          #  sample_var: Sample
-          - dataset_name: "be1"
+          - dataset_name: "sc-mix"
+            batch_var: null
+            labels_var: cell_line
+            sample_var: null
+      - id: d-feat-sel
+        name: "R-based dataset downloads (feature selection collection)"
+        software_environment: r_conda
+        repository:
+          url: https://github.com/omni-scrna/1-data
+          commit: 14c5ddd
+        parameters:
+          - dataset_name: "be1-subset"
             batch_var: Sample
             labels_var: Sample
             sample_var: Sample
-          #- dataset_name: "sc-mix"
-          #  batch_var: null
-          #  labels_var: cell_line
-          #  sample_var: null
+      - id: d-annotation
+        name: "R-based dataset downloads (cell type annotation collection)"
+        software_environment: r_conda
+        repository:
+          url: https://github.com/omni-scrna/1-data
+          commit: cell-ontology
+        parameters:
+          - dataset_name: "cb"
+            batch_var: species
+            labels_var: celltype
+            sample_var: species
 
   - id: FILT
     inputs:
@@ -140,9 +169,11 @@ stages:
       - id: fe-seurat
         name: "seurat-based gene selection"
         software_environment: "seurat"
+        exclude:
+          - d-pca
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: ccb7018
+          commit: reorder-debug
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -150,6 +181,8 @@ stages:
       - id: fe-scrapper
         name: "scrapper-based gene selection"
         software_environment: "scrapper"
+        exclude:
+          - d-pca
         repository:
           url: https://github.com/omni-scrna/scrapper
           commit: 18843a7
@@ -159,6 +192,8 @@ stages:
       - id: fe-scanpy
         name: "scanpy-based gene selection"
         software_environment: "scanpy"
+        exclude:
+          - d-pca
         repository:
           url: https://github.com/omni-scrna/scanpy
           commit: 53eb292
@@ -181,6 +216,9 @@ stages:
       - id: pc-scanpy
         name: "scanpy PCA"
         software_environment: "scanpy"
+        exclude:
+          - d-feat-sel
+          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scanpy
           commit: 53eb292
@@ -192,6 +230,9 @@ stages:
       - id: pc-scrapper
         name: "scrapper PCA"
         software_environment: "scrapper"
+        exclude:
+          - d-feat-sel
+          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
           commit: 18843a7
@@ -209,20 +250,21 @@ stages:
       - id: embedding_metrics
         path: "{dataset}_embedding_metrics.json"
     modules:
-      - id: em-metrics-py
-        name: "Embedding metrics in python"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: 646f1e4
-          entrypoint: embedding-py
       - id: em-metrics-r
         name: "Embedding metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 646f1e4
+          commit: main
           entrypoint: embedding-r
+      #- id: em-metrics-py
+      #  name: "Embedding metrics in python"
+      #  software_environment: "metrics"
+      #  repository:
+      #    url: https://github.com/omni-scrna/metrics
+      #    commit: main 
+      #    entrypoint: embedding-py
+
 
   - id: NNG
     inputs:
@@ -340,6 +382,10 @@ stages:
       - id: in-harmony
         name: "Harmony batch correction"
         software_environment: "integrate"
+        exclude:
+          - d-pca
+          - d-annotation
+          - d-feat-sel
         repository:
           url: https://github.com/omni-scrna/7-integrate
           commit: d42312a
@@ -349,6 +395,10 @@ stages:
       - id: in-seurat
         name: "Seurat IntegrateLayers batch correction"
         software_environment: "seurat"
+        exclude:
+          - d-pca
+          - d-annotation
+          - d-feat-sel
         repository:
           url: https://github.com/omni-scrna/seurat
           commit: ccb7018
@@ -359,6 +409,10 @@ stages:
       - id: in-scanorama
         name: "Scanorama batch correction"
         software_environment: "integrate-py"
+        exclude:
+          - d-pca
+          - d-annotation
+          - d-feat-sel
         repository:
           url: https://github.com/omni-scrna/7-integrate-py
           commit: 73e3340

@@ -12,6 +12,7 @@ dependencies:
   - bioconductor-geoquery
   - bioconductor-anndatar
   - bioconductor-experimenthub
+  - bioconductor-scrnaseq
   - bioconductor-scrapper
   - bioconductor-scuttle
   - r-argparser
