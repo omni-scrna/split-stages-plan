@@ -127,8 +127,8 @@ stages:
         name: "Seurat-based scRNA-seq normalization methods"
         software_environment: "seurat"
         repository:
-          url: https://github.com/omni-scrna/seurat
-          commit: c4cfdf3
+          url: ttps://github.com/omni-scrna/seurat
+          commit: d30e1c0
           entrypoint: normalize
         parameters:
           - flavor: ["sctransformv2"]

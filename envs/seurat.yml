@@ -11,7 +11,7 @@ dependencies:
 - bioconductor-rhdf5 *
 - bioconductor-hdf5array *
 - r-data.table *
-- r-optparse *
+- r-argparser *
 - r-magrittr *
 - r-yaml *
 - r-argparser *
