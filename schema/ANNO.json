@@ -1,9 +1,10 @@
 {
   "stage": "ANNO",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "benchmark": "omni-scrna/split-stages-plan",
   "args": [
-    { "flag": "--normalized_selected_h5", "type": "path", "help": "Normalized, gene-selected matrix H5" }
+    { "flag": "--normalized_selected_h5", "type": "path", "help": "Normalized, gene-selected matrix H5" },
+    { "flag": "--rawdata_h5ad", "type": "path", "help": "rawdata H5AD file" }
   ]
 }
 

@@ -52,6 +52,9 @@ software_environments:
   count-factor:
     name: count-factor
     conda: envs/cntfct.yml
+  annotate-py:
+    name: annotate env py
+    conda: envs/annotate-py.yml
 
 
 stages:
@@ -498,6 +501,7 @@ stages:
   - id: ANNO
     inputs:
     - normalized_selected_h5
+    - rawdata_h5ad
     outputs:
     - id: annotations_tsv
       path: '{dataset}_annotations.tsv'
@@ -507,9 +511,23 @@ stages:
       software_environment: annotate
       repository:
         url: https://github.com/omni-scrna/9-annotate
-        commit: col_renaming_07_08
+        commit: pred-cell-ontology
+        entrypoint: singler
       parameters:
         - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
+    - id: an-celltypist
+      name: celltypist annotation
+      software_environment: annotate-py
+      exclude:
+        - d-pca
+        - d-feat-sel
+        - d-integration
+      repository:
+        url: https://github.com/omni-scrna/9-annotate
+        commit: pred-cell-ontology
+        entrypoint: celltypist
+      parameters:
+        - model: ["Immune_All_Low", "Immune_All_High"]
 
   - id: ANNO-M
     inputs:
