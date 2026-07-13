@@ -419,13 +419,20 @@ stages:
           - flavor: ["igraph", "leidenalg"]
             resolution: [0.5, 1.0]
             random_seed: 42
-       
+
+  - id: CLUST-E
+    inputs:
+      - pcas_tsv
+    outputs:
+      - id: clusters_embedding_tsv
+        path: "{dataset}_clusters.tsv"
+    modules:
       - id: cluster-optics
         name: "scikit-learn OPTICS clustering"
         software_environment: "py_conda"
         repository:
           url: https://github.com/omni-scrna/clustering-py
-          commit: 280366b
+          commit: 640c243
           entrypoint: cluster
         parameters:
           - min_samples: [10, 30, 50]
