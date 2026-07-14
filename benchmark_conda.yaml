@@ -437,7 +437,13 @@ stages:
         parameters:
           - min_samples: [10, 30, 50]
             algorithm: ["ball_tree", "kd_tree", "brute"]
-            metric: ["euclidean", "manhattan", "cosine"]
+            metric: ["euclidean", "manhattan"]
+            cluster_method: "xi"
+            xi: 0.05
+            random_seed: 42
+          - min_samples: [10, 30, 50]
+            algorithm: "brute"
+            metric: "cosine"
             cluster_method: "xi"
             xi: 0.05
             random_seed: 42
