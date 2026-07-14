@@ -14,5 +14,4 @@ dependencies:
 - r-argparser *
 - r-magrittr *
 - r-yaml *
-- r-argparser *
 - bioconductor-glmgampoi >=1.22.0,<2
