@@ -203,7 +203,7 @@ stages:
           commit: b5c6855
           entrypoint: feat-select
         parameters:
-          - flavor: ["pearson_residuals", "scanpy_seurat"]
+          - flavor: ["pearson_residuals", "scanpy_seurat", "scanpy_cell_ranger"]
             number_selected: 2000
 
   - id: PCA
@@ -497,6 +497,34 @@ stages:
         parameters:
           - flavor: ["igraph", "leidenalg"]
             resolution: [0.5, 1.0]
+            random_seed: 42
+
+  - id: CLUST-E
+    inputs:
+      - pcas_tsv
+    outputs:
+      - id: clusters_embedding_tsv
+        path: "{dataset}_clusters.tsv"
+    modules:
+      - id: cluster-optics
+        name: "scikit-learn OPTICS clustering"
+        software_environment: "py_conda"
+        repository:
+          url: https://github.com/omni-scrna/clustering-py
+          commit: 640c243
+          entrypoint: cluster
+        parameters:
+          - min_samples: [10, 30, 50]
+            algorithm: ["ball_tree", "kd_tree", "brute"]
+            metric: ["euclidean", "manhattan"]
+            cluster_method: "xi"
+            xi: 0.05
+            random_seed: 42
+          - min_samples: [10, 30, 50]
+            algorithm: "brute"
+            metric: "cosine"
+            cluster_method: "xi"
+            xi: 0.05
             random_seed: 42
 
   - id: ANNO
