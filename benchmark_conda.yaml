@@ -176,7 +176,7 @@ stages:
         exclude:
           - d-pca
         repository:
-          url: https://github.com/omni-scrna/seurat/
+          url: https://github.com/omni-scrna/seurat
           commit: f913675
           entrypoint: select
         parameters:
