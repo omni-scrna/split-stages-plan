@@ -572,7 +572,7 @@ stages:
       software_environment: count-factor
       repository:
         url: https://github.com/omni-scrna/count-factor
-        commit: multi-methods
+        commit: 2e7b8e0
       parameters:
       - factorization_type: ["newwave", "scgbm"]
         n_dim: 4
