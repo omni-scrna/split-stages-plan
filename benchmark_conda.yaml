@@ -562,15 +562,19 @@ stages:
     - rawdata_h5ad
     - filtered_cellids
     outputs:
-    - id: reduced_dims_tsv
-      path: '{dataset}_reduced_dims.tsv'
+    - id: factor_scores_tsv
+      path: '{dataset}_factor_scores.tsv'
+    - id: factor_loadings_tsv
+      path: '{dataset}_factor_loadings.tsv'  
     modules:
     - id: cntfct
       name: count-factor
       software_environment: count-factor
       repository:
         url: https://github.com/omni-scrna/count-factor
-        commit: 57096ed
+        commit: multi-methods
       parameters:
-      - n_dim: 2
+      - factorization_type: ["newwave", "scgbm"]
+        n_dim: 4
         random_seed: 42
+      

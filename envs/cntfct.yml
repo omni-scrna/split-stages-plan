@@ -1,5 +1,6 @@
 name: count-factor
 channels:
+- https://prefix.dev/almost-conductor
 - conda-forge
 - bioconda
 - nodefaults
@@ -19,4 +20,5 @@ dependencies:
 - r-stringr
 - r-yaml
 - r-data.table 
+- r-scgbm
 
