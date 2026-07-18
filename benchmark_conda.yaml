@@ -122,19 +122,22 @@ stages:
     outputs:
       - id: filtered_cellids
         path: "{dataset}_cellids.txt.gz"
+      - id: filtered_featureids
+        path: "{dataset}_featureids.txt.gz"
     modules:
       - id: fi-scrapper
         name: "scrapper-style filtering"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 18843a7
+          commit: 444a80b
           entrypoint: filter
 
   - id: NORM
     inputs:
       - rawdata_h5ad
       - filtered_cellids
+      - filtered_featureids
     outputs:
       - id: normalized_h5
         path: "{dataset}_normalized.h5"
@@ -144,14 +147,14 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 18843a7
+          commit: 444a80b
           entrypoint: normalize
       - id: nr-scanpy
         name: "Python-based scRNA-seq normalization methods"
         software_environment: "py_conda"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 997b888
+          commit: b5c6855
           entrypoint: normalize
         parameters:
           - flavor: ["log1pCP10k", "analyticalPearsonResiduals"]
@@ -161,6 +164,7 @@ stages:
       - rawdata_h5ad
       - normalized_h5
       - filtered_cellids
+      - filtered_featureids
       - properties_info
     outputs:
       - id: normalized_selected_h5
@@ -173,7 +177,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: reorder-debug
+          commit: f913675
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -185,7 +189,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 18843a7
+          commit: 444a80b
           entrypoint: select
         parameters:
           - number_selected: 2000
@@ -196,7 +200,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 0d684f8
+          commit: b5c6855
           entrypoint: feat-select
         parameters:
           - flavor: ["pearson_residuals", "scanpy_seurat", "scanpy_cell_ranger"]
