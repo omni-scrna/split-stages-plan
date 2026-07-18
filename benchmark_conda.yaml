@@ -108,7 +108,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: cell-ontology
+          commit: 0346bd4
         parameters:
           - dataset_name: "cb"
             batch_var: species
@@ -173,7 +173,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: reorder-debug
+          commit: ac9c9f5
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -255,7 +255,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: main
+          commit: 4cfb831
           entrypoint: embedding-r
       #- id: em-metrics-py
       #  name: "Embedding metrics in python"
@@ -344,7 +344,7 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: add-clustering
+          commit: 8a1cfd8
           entrypoint: cluster
         parameters:
           - flavor: ["leiden_modularity", "leiden_cpm", "multilevel", "walktrap"]
@@ -438,7 +438,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: integration-metrics
+          commit: 4cfb831
           entrypoint: integration-r
         parameters:
           - k: 20          # knn size for CellMixS cms/entropy/isi (evalIntegration)
@@ -451,7 +451,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: integration-metrics
+          commit: 4cfb831
           entrypoint: integration-py
         parameters:
           - n_neighbors: 90  # knn graph size for clisi_knn (pynndescent)
@@ -535,7 +535,7 @@ stages:
       software_environment: annotate
       repository:
         url: https://github.com/omni-scrna/9-annotate
-        commit: col_renaming_07_08
+        commit: 439981c
       parameters:
         - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 
@@ -552,7 +552,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: integration-metrics
+          commit: 4cfb831
           entrypoint: annotation-r
   - id: CNTFCT
     resources:
