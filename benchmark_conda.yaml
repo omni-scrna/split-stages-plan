@@ -199,8 +199,9 @@ stages:
           commit: 0d684f8
           entrypoint: feat-select
         parameters:
-          - flavor: ["pearson_residuals", "scanpy_seurat", "scanpy_cell_ranger"]
+          - flavor: ["pearson_residuals"]
             number_selected: 2000
+          #- flavor: ["pearson_residuals", "scanpy_seurat", "scanpy_cell_ranger"]
 
   - id: PCA
     resources:
@@ -574,7 +575,8 @@ stages:
         url: https://github.com/omni-scrna/count-factor
         commit: 2e7b8e0
       parameters:
-      - factorization_type: ["newwave", "scgbm"]
+      - factorization_type: ["scgbm"]
         n_dim: 4
         random_seed: 42
+      #- factorization_type: ["newwave", "scgbm"]
       
