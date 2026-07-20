@@ -163,7 +163,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: d30e1c0
+          commit: 47b8e31
           entrypoint: normalize
         parameters:
           - flavor: ["sctransformv2"]
@@ -210,7 +210,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: b5c6855
+          commit: 2a56c14
           entrypoint: feat-select
         parameters:
           - flavor: ["pearson_residuals", "scanpy_seurat", "scanpy_cell_ranger"]
