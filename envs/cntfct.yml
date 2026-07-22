@@ -21,4 +21,4 @@ dependencies:
 - r-yaml
 - r-data.table 
 - r-scgbm
-
+- r-glmpca
