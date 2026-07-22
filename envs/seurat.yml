@@ -13,3 +13,5 @@ dependencies:
 - r-data.table *
 - r-argparser *
 - r-magrittr *
+- r-yaml *
+- bioconductor-glmgampoi >=1.22.0,<2
