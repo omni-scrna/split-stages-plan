@@ -4,7 +4,7 @@ description: This benchmark lays out stages for each step of an scRNA-seq pipeli
 benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
 
 # Benchmark configuration
-version: "0.0.3"
+version: "0.1.0"
 api_version: "0.4.0"
 
 provenance:
@@ -52,6 +52,9 @@ software_environments:
   count-factor:
     name: count-factor
     conda: envs/cntfct.yml
+  rcppml:
+    name: RcppML env (r-rcppml 1.0.0 from the almost-conductor channel; ships RcppML_gpu.so)
+    conda: envs/rcppml.yml
 
 
 stages:
@@ -189,7 +192,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: f913675 
+          commit: f913675
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -259,6 +262,85 @@ stages:
             n_components: 50
             random_seed: 42
 
+      - id: pc-rcppml
+        name: "RcppML truncated SVD (cpu)"
+        software_environment: "rcppml"
+        exclude:
+          - d-feat-sel
+          - d-annotation
+        repository:
+          url: https://github.com/btraven00/rcppml
+          commit: 28b8cb94d4c819d6b080a7f6f6f9dadec2c9458d
+          entrypoint: pca
+        parameters:
+          - solver: [lanczos, krylov]
+            n_components: 50
+            random_seed: 42
+
+      # Same stage, not strictly a PCA: nmf reads and writes the same
+      # with factors named PC1..PCk so the downstream metrics and validators can read
+      # it unchanged.
+      # But, NMF is only defined on non-negative input; needs extra excludes.
+      - id: pc-rcppml-nmf
+        name: "RcppML NMF (cpu)"
+        software_environment: "rcppml"
+        exclude:
+          - d-feat-sel
+          - d-annotation
+          # NMF is only defined on non-negative input, 
+          # That rules out the Pearson-residual normalisations:
+          # nr-seurat (sctransformv2) and nr-scanpy's
+          # analyticalPearsonResiduals. 
+          # TODO: Split nr-scanpy's two flavors into separate module ids to get the log one.
+          - nr-seurat
+          - nr-scanpy
+        repository:
+          url: https://github.com/btraven00/rcppml
+          commit: 28b8cb94d4c819d6b080a7f6f6f9dadec2c9458d
+          entrypoint: nmf
+        parameters:
+          - loss: [mse]
+            n_components: 50
+            random_seed: 42
+
+      # GPU variants.
+      # We split so that the DAG can run on GPU-less hosts
+      - id: pc-rcppml-gpu
+        name: "RcppML truncated SVD (GPU)"
+        software_environment: "rcppml"
+        requires_capabilities: [gpu]
+        exclude:
+          - d-feat-sel
+          - d-annotation
+        repository:
+          url: https://github.com/btraven00/rcppml
+          commit: 28b8cb94d4c819d6b080a7f6f6f9dadec2c9458d
+          entrypoint: pca
+        parameters:
+          - solver: [lanczos, krylov]
+            n_components: 50
+            random_seed: 42
+            backend: gpu
+
+      - id: pc-rcppml-nmf-gpu
+        name: "RcppML NMF (GPU)"
+        requires_capabilities: [gpu]
+        software_environment: "rcppml"
+        exclude:
+          - d-feat-sel
+          - d-annotation
+          - nr-seurat
+          - nr-scanpy
+        repository:
+          url: https://github.com/btraven00/rcppml
+          commit: 28b8cb94d4c819d6b080a7f6f6f9dadec2c9458d
+          entrypoint: nmf
+        parameters:
+          - loss: [mse]
+            n_components: 50
+            random_seed: 42
+            backend: gpu
+
   - id: EMBED-M
     inputs:
       - pcas_tsv
@@ -279,7 +361,7 @@ stages:
       #  software_environment: "metrics"
       #  repository:
       #    url: https://github.com/omni-scrna/metrics
-      #    commit: main 
+      #    commit: main
       #    entrypoint: embedding-py
 
 
@@ -326,7 +408,7 @@ stages:
     outputs:
       - id: clusters_tsv
         path: "{dataset}_clusters.tsv"
-    modules: 
+    modules:
       - id: cl-scanpy
         name: "scanpy Leiden clustering"
         software_environment: "scanpy"
@@ -370,7 +452,7 @@ stages:
             resolution: [0.5, 1.0]
             walktrap_steps: [2, 4]
             random_seed: 42
-        
+
   - id: CLUST-M
     inputs:
       - clusters_tsv
@@ -576,6 +658,7 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: 4cfb831
           entrypoint: annotation-r
+
   - id: CNTFCT
     resources:
       cores: 4
@@ -587,14 +670,14 @@ stages:
     - id: pcas_tsv
       path: '{dataset}_pcas.tsv'
     - id: loadings_tsv
-      path: '{dataset}_loadings.tsv'  
+      path: '{dataset}_loadings.tsv'
     modules:
     - id: cntfct
       name: count-factor
       software_environment: count-factor
       repository:
         url: https://github.com/omni-scrna/count-factor
-        commit: multi-methods 
+        commit: multi-methods
       parameters:
       - factorization_type: ["newwave", "scgbm", "glmpca"]
         n_dim: 4
