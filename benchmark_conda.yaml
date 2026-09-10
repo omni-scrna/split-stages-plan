@@ -648,5 +648,5 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 88f754c
+          commit: c8d28ac
           entrypoint: normalization-r
