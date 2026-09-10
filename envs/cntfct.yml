@@ -1,18 +1,23 @@
 name: count-factor
 channels:
-- https://prefix.dev/almost-conductor
+# almost-conductor below bioconda, matching every other env here. Above it,
+# strict channel priority excludes bioconda's bioconductor-anndatar outright
+# (almost-conductor also carries that package), which contradicts the
+# explicit `bioconda::bioconductor-anndatar` pin below and fails the solve.
 - conda-forge
 - bioconda
+- https://prefix.dev/almost-conductor
 - nodefaults
 dependencies:
 - bioconductor-newwave >=1.20.0,<2
 - bioconductor-rhdf5
 - bioconductor-hdf5array
 - bioconductor-rhdf5lib >=1.32.0,<2
-- conda-forge::datatable >=1.1.0,<2
-- conda-forge::yaml >=0.2.5,<0.3
+# Dropped, matching count-factor's pixi.toml: `datatable` (the Python/H2O
+# package -- run.R uses R's data.table, listed below), `yaml` (the C library --
+# run.R reads no YAML; r-yaml is separate) and `r-optparse` (run.R parses with
+# argparser). None are loaded by run.R or check.R.
 - bioconductor-delayedarray >=0.36.0,<0.37
-- conda-forge::r-optparse >=1.8.2,<2
 - r-base >=4.5.3,<4.6
 - bioconda::bioconductor-anndatar >=1.0.2,<2
 - bioconductor-singlecellexperiment
