@@ -126,13 +126,15 @@ stages:
         path: "{dataset}_cellids.txt.gz"
       - id: filtered_featureids
         path: "{dataset}_featureids.txt.gz"
+      - id: size_factor_tsv
+        path: "{dataset}_size_factors.tsv"
     modules:
       - id: fi-scrapper
         name: "scrapper-style filtering"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 444a80b
+          commit: f201861
           entrypoint: filter
 
   - id: NORM
@@ -149,7 +151,7 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 444a80b
+          commit: f201861
           entrypoint: normalize
       - id: nr-scanpy
         name: "Python-based scRNA-seq normalization methods"
@@ -201,7 +203,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 444a80b
+          commit: f201861
           entrypoint: select
         parameters:
           - number_selected: 2000
@@ -322,6 +324,8 @@ stages:
       - id: nn-scanpy
         name: "scanpy KNN graph"
         software_environment: "scanpy"
+        exclude:
+          - cntfct
         repository:
           url: https://github.com/omni-scrna/scanpy
           commit: b41bf43
@@ -433,6 +437,7 @@ stages:
           - d-pca
           - d-annotation
           - d-feat-sel
+          - cntfct
         repository:
           url: https://github.com/omni-scrna/7-integrate
           commit: 52c6c64
@@ -447,6 +452,7 @@ stages:
           - d-pca
           - d-annotation
           - d-feat-sel
+          - cntfct
         repository:
           url: https://github.com/omni-scrna/seurat
           commit: db6c6ba
@@ -462,6 +468,7 @@ stages:
           - d-pca
           - d-annotation
           - d-feat-sel
+          - cntfct
         repository:
           url: https://github.com/omni-scrna/7-integrate-py
           commit: e005eb5
@@ -627,3 +634,19 @@ stages:
           - factorization_type: ["newwave", "scgbm", "glmpca"]
             n_dim: 4
             random_seed: 42
+
+  - id: NORM-M
+    inputs:
+      - embedding_tsv
+      - size_factor_tsv
+    outputs:
+      - id: normalization_metrics
+        path: "{dataset}_normalization_metrics.json"
+    modules:
+      - id: nm-metrics-r
+        name: "Normalization metrics in R"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: 88f754c
+          entrypoint: normalization-r
