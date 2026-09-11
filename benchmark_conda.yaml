@@ -286,7 +286,7 @@ stages:
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b90126d
+          commit: b28deb6
           entrypoint: pca
         parameters:
           - solver: [covariance-eigh, randomized-halko]
@@ -367,7 +367,7 @@ stages:
         requires_capabilities: [gpu]
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b90126d
+          commit: b28deb6
           entrypoint: knn
         parameters:
           # rsc.pp.neighbors at the cuVS default
@@ -447,7 +447,7 @@ stages:
         requires_capabilities: [gpu]
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b90126d
+          commit: b28deb6
           entrypoint: cluster
         parameters:
           - method: "rapids-leiden"
@@ -639,7 +639,7 @@ stages:
         requires_capabilities: [gpu]
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b90126d
+          commit: b28deb6
           entrypoint: cluster_embedding
         parameters:
           - method: "rapids-kmeans"
