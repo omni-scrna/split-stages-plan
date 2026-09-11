@@ -2,7 +2,7 @@
 name = "split-stages-plan"
 version = "0.1.0"
 channels = ["conda-forge"]
-platforms = ["linux-64"]
+platforms = ["linux-64", "osx-arm64"]
 
 [feature.validation.tasks]
 validate-artifacts = "validators/all.sh"
@@ -26,10 +26,13 @@ conda = "*"
 go-yq = "*"
 
 [feature.plan.pypi-dependencies]
-omnibenchmark = { git = "https://github.com/omnibenchmark/omnibenchmark.git", branch = "main" }
+omnibenchmark = { git = "https://github.com/omnibenchmark/omnibenchmark.git", branch = "gather-lean-3" }
 
 [feature.plan.tasks]
 validate-plan = "ob validate plan benchmark_conda.yaml"
+trim = "ci/simple-trim.sh"
+dry-run = "ob run benchmark_minimal.yaml -d --unpinned"
+run-minimal = "ob run benchmark_minimal.yaml -c 32 --unpinned"
 
 [environments]
 validation = { features = ["validation"] }
