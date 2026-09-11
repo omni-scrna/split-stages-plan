@@ -629,7 +629,7 @@ stages:
         software_environment: count-factor
         repository:
           url: https://github.com/omni-scrna/count-factor
-          commit: 2fdc867
+          commit: ec9badb
         parameters:
           - factorization_type: ["newwave", "scgbm", "glmpca"]
             n_dim: 4
