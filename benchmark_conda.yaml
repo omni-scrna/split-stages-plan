@@ -351,6 +351,23 @@ stages:
           commit: 646f1e4
           entrypoint: graph-r
 
+  - id: GEOM-M
+    inputs:
+      - normalized_selected_h5
+      - pcas_tsv
+      - neighbors_h5
+    outputs:
+      - id: geometry_metrics
+        path: "{dataset}_geometry_metrics.json"
+    modules:
+      - id: geometry-metrics-py
+        name: "Pairwise representation geometry metrics"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: 4ce6b6d
+          entrypoint: geometry-py
+
   - id: CLUST
     inputs:
       - neighbors_h5
