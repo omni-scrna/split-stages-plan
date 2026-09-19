@@ -80,7 +80,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: remove-extra
+          commit: 4e4f1a5
         parameters:
           - dataset_name: "be1"
             batch_var: Sample
@@ -95,7 +95,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 607208a
+          commit: 4e4f1a5
         parameters:
           - dataset_name: "sc-mix"
             batch_var: null
@@ -106,7 +106,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 607208a
+          commit: 4e4f1a5
         parameters:
           - dataset_name: "be1-subset"
             batch_var: Sample
@@ -117,7 +117,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 607208a
+          commit: 4e4f1a5
         parameters:
           - dataset_name: "cb"
             batch_var: species
@@ -174,7 +174,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: adjust-normalize
+          commit: 984d35a
           entrypoint: normalize
         parameters:
           - flavor: ["sctransformv2"]
@@ -198,7 +198,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: adjust-normalize
+          commit: 984d35a
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
