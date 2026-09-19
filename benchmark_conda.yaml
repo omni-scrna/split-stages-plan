@@ -80,7 +80,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 607208a
+          commit: remove-extra
         parameters:
           - dataset_name: "be1"
             batch_var: Sample
@@ -174,7 +174,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 47b8e31
+          commit: adjust-normalize
           entrypoint: normalize
         parameters:
           - flavor: ["sctransformv2"]
@@ -198,7 +198,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: db6c6ba
+          commit: adjust-normalize
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -473,138 +473,135 @@ stages:
           commit: 257c952
           entrypoint: cluster-r
 
-  - id: INTG8
-    inputs:
-      - embedding_tsv
-      - loadings_tsv
-      - normalized_selected_h5
-      - rawdata_h5ad
-      - properties_info
-    outputs:
-      - id: corrected_tsv
-        path: "{dataset}_corrected.tsv"
-    modules:
-      - id: in-harmony
-        name: "Harmony batch correction"
-        software_environment: "integrate"
-        exclude:
-          - cntfct
-          - d-pca
-          - d-annotation
-          - d-feat-sel
-          - cntfct
-        repository:
-          url: https://github.com/omni-scrna/7-integrate
-          commit: 52c6c64
-          entrypoint: harmony-r
-        parameters:
-          - theta: [0.1, 2]
-      - id: in-seurat
-        name: "Seurat IntegrateLayers batch correction"
-        software_environment: "seurat"
-        exclude:
-          - cntfct
-          - d-pca
-          - d-annotation
-          - d-feat-sel
-          - cntfct
-        repository:
-          url: https://github.com/omni-scrna/seurat
-          commit: db6c6ba
-          entrypoint: integrate
-        parameters:
-          - method: [rpca]
-            k_anchor: [5, 20]
-      - id: in-scanorama
-        name: "Scanorama batch correction"
-        software_environment: "integrate-py"
-        exclude:
-          - cntfct
-          - d-pca
-          - d-annotation
-          - d-feat-sel
-          - cntfct
-        repository:
-          url: https://github.com/omni-scrna/7-integrate-py
-          commit: e005eb5
-          entrypoint: scanorama
-        parameters:
-          - knn: [20]
-            sigma: [15]
+#  - id: INTG8
+#    inputs:
+#      - embedding_tsv
+#      - loadings_tsv
+#      - normalized_selected_h5
+#      - rawdata_h5ad
+#      - properties_info
+#    outputs:
+#      - id: corrected_tsv
+#        path: "{dataset}_corrected.tsv"
+#    modules:
+#      - id: in-harmony
+#        name: "Harmony batch correction"
+#        software_environment: "integrate"
+#        exclude:
+#          - cntfct
+#          - d-pca
+#          - d-annotation
+#          - d-feat-sel
+#        repository:
+#          url: https://github.com/omni-scrna/7-integrate
+#          commit: 52c6c64
+#          entrypoint: harmony-r
+#        parameters:
+#          - theta: [0.1, 2]
+#      - id: in-seurat
+#        name: "Seurat IntegrateLayers batch correction"
+#        software_environment: "seurat"
+#        exclude:
+#          - d-pca
+#          - d-annotation
+#          - d-feat-sel
+#          - cntfct
+#        repository:
+#          url: https://github.com/omni-scrna/seurat
+#          commit: db6c6ba
+#          entrypoint: integrate
+#        parameters:
+#          - method: [rpca]
+#            k_anchor: [5, 20]
+#      - id: in-scanorama
+#        name: "Scanorama batch correction"
+#        software_environment: "integrate-py"
+#        exclude:
+#          - d-pca
+#          - d-annotation
+#          - d-feat-sel
+#          - cntfct
+#        repository:
+#          url: https://github.com/omni-scrna/7-integrate-py
+#          commit: e005eb5
+#          entrypoint: scanorama
+#        parameters:
+#          - knn: [20]
+#            sigma: [15]
 
-  - id: INTG8-M
-    inputs:
-      - corrected_tsv
-      - rawdata_clusters_truth
-      - rawdata_h5ad
-      - properties_info
-      - embedding_tsv
-      - clusters_corrected_tsv
-    outputs:
-      - id: integration_metrics
-        path: "{dataset}_integration_metrics.json"
-    modules:
-      - id: in-metrics-r
-        name: "Integration metrics in R"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: f0a85a3
-          entrypoint: integration-r
-        parameters:
-          - k: 20 # knn size for CellMixS cms/entropy/isi (evalIntegration)
-            n_dim: 10 # corrected-embedding dims used as the CellMixS subspace
-            cell_min: 10 # min cells per batch for cms's Anderson-Darling test
-            ldf_k: 75 # knn size for CellMixS ldfDiff (matches ldfDiff's own default)
-            ldf_n_dim: 20 # pre/post dims used for ldfDiff's LDF subspace (matches ldfDiff's own default)
-      - id: in-metrics-py
-        name: "Integration metrics in python (scib-metrics + sklearn)"
-        software_environment: "metrics"
-        repository:
-          url: https://github.com/omni-scrna/metrics
-          commit: f0a85a3
-          entrypoint: integration-py
-        parameters:
-          - n_neighbors: 90 # knn graph size for clisi_knn (pynndescent)
-            random_state: 0 # random seed for the pynndescent approximate KNN search
+#  - id: INTG8-M
+#    inputs:
+#      - corrected_tsv
+#      - rawdata_clusters_truth
+#      - rawdata_h5ad
+#      - properties_info
+#      - embedding_tsv
+#      - clusters_corrected_tsv
+#    outputs:
+#      - id: integration_metrics
+#        path: "{dataset}_integration_metrics.json"
+#    modules:
+#      - id: in-metrics-r
+#        name: "Integration metrics in R"
+#        software_environment: "metrics"
+#        repository:
+#          url: https://github.com/omni-scrna/metrics
+#          commit: f0a85a3
+#          entrypoint: integration-r
+#        parameters:
+#          - k: 20 # knn size for CellMixS cms/entropy/isi (evalIntegration)
+#            n_dim: 10 # corrected-embedding dims used as the CellMixS subspace
+#            cell_min: 10 # min cells per batch for cms's Anderson-Darling test
+#            ldf_k: 75 # knn size for CellMixS ldfDiff (matches ldfDiff's own default)
+#            ldf_n_dim: 20 # pre/post dims used for ldfDiff's LDF subspace (matches ldfDiff's own default)
+#      - id: in-metrics-py
+#        name: "Integration metrics in python (scib-metrics + sklearn)"
+#        software_environment: "metrics"
+#        repository:
+#          url: https://github.com/omni-scrna/metrics
+#          commit: f0a85a3
+#          entrypoint: integration-py
+#        parameters:
+#          - n_neighbors: 90 # knn graph size for clisi_knn (pynndescent)
+#            random_state: 0 # random seed for the pynndescent approximate KNN search
 
-  - id: NNG-C
-    inputs:
-      - corrected_tsv
-    outputs:
-      - id: neighbors_corrected_h5
-        path: "{dataset}_neighbors.h5"
-    modules:
-      - id: nn-scanpy-c
-        name: "scanpy KNN graph (corrected embedding)"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: b41bf43
-          entrypoint: knn
-        parameters:
-          - n_neighbors: 15
-            random_seed: 42
-            flavor: "umap"
+#  - id: NNG-C
+#    inputs:
+#      - corrected_tsv
+#    outputs:
+#      - id: neighbors_corrected_h5
+#        path: "{dataset}_neighbors.h5"
+#    modules:
+#      - id: nn-scanpy-c
+#        name: "scanpy KNN graph (corrected embedding)"
+#        software_environment: "scanpy"
+#        repository:
+#          url: https://github.com/omni-scrna/scanpy
+#          commit: b41bf43
+#          entrypoint: knn
+#        parameters:
+#          - n_neighbors: 15
+#            random_seed: 42
+#            flavor: "umap"
 
-  - id: CLUST-C
-    inputs:
-      - neighbors_corrected_h5
-    outputs:
-      - id: clusters_corrected_tsv
-        path: "{dataset}_clusters.tsv"
-    modules:
-      - id: cl-scanpy-c
-        name: "scanpy Leiden clustering (corrected embedding)"
-        software_environment: "scanpy"
-        repository:
-          url: https://github.com/omni-scrna/scanpy
-          commit: b41bf43
-          entrypoint: cluster
-        parameters:
-          - flavor: ["igraph", "leidenalg"]
-            resolution: [0.5, 1.0]
-            random_seed: 42
+#  - id: CLUST-C
+#    inputs:
+#      - neighbors_corrected_h5
+#    outputs:
+#      - id: clusters_corrected_tsv
+#        path: "{dataset}_clusters.tsv"
+#    modules:
+#      - id: cl-scanpy-c
+#        name: "scanpy Leiden clustering (corrected embedding)"
+#        software_environment: "scanpy"
+#        repository:
+#          url: https://github.com/omni-scrna/scanpy
+#          commit: b41bf43
+#          entrypoint: cluster
+#        parameters:
+#          - flavor: ["igraph", "leidenalg"]
+#            resolution: [0.5, 1.0]
+#            random_seed: 42
 
   - id: CLUST-E
     inputs:
