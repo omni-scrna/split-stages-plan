@@ -487,7 +487,7 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 4ce6b6d
+          commit: 73c6a60
           entrypoint: geometry-py
 
   - id: CLUST
