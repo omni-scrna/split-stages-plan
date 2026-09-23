@@ -476,7 +476,7 @@ stages:
   - id: GEOM-M
     inputs:
       - normalized_selected_h5
-      - pcas_tsv
+      - embedding_tsv
       - neighbors_h5
     outputs:
       - id: geometry_metrics
