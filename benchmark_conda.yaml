@@ -4,7 +4,7 @@ description: This benchmark lays out stages for each step of an scRNA-seq pipeli
 benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
 
 # Benchmark configuration
-version: "0.0.3"
+version: "0.1.0"
 api_version: "0.4.0"
 
 provenance:
@@ -52,7 +52,19 @@ software_environments:
   count-factor:
     name: count-factor
     conda: envs/cntfct.yml
-
+  sklearn:
+    name: sklearn multi-module
+    conda: envs/sklearn.yml
+  # The rapids modules are GPU-only, so they declare `requires_capabilities: [gpu]`
+  # and are pruned from the DAG unless the run passes `--with-capability gpu`.
+  # That field needs omnibenchmark >= 0.7.0; older versions ignore it and would
+  # schedule these modules on a CPU host; comment the modules by hand if you're on 0.6.0
+  rapids_singlecell:
+    name: rapids-singlecell (GPU)
+    conda: envs/rapids-singlecell.yml
+  rcppml:
+    name: RcppML env (r-rcppml 1.0.0 from the almost-conductor channel; ships RcppML_gpu.so)
+    conda: envs/rcppml.yml
 
 stages:
   - id: DATA
@@ -71,7 +83,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: dd08c17
+          commit: 4e4f1a5
         parameters:
           - dataset_name: "be1"
             batch_var: Sample
@@ -86,7 +98,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 14c5ddd
+          commit: 4e4f1a5
         parameters:
           - dataset_name: "sc-mix"
             batch_var: null
@@ -97,7 +109,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 14c5ddd
+          commit: 4e4f1a5
         parameters:
           - dataset_name: "be1-subset"
             batch_var: Sample
@@ -108,7 +120,7 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 0346bd4
+          commit: 4e4f1a5
         parameters:
           - dataset_name: "cb"
             batch_var: species
@@ -132,7 +144,7 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 985389f
+          commit: f201861
           entrypoint: filter
 
   - id: NORM
@@ -149,7 +161,7 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 444a80b
+          commit: f201861
           entrypoint: normalize
       - id: nr-scanpy
         name: "Python-based scRNA-seq normalization methods"
@@ -165,7 +177,7 @@ stages:
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 47b8e31
+          commit: 984d35a
           entrypoint: normalize
         parameters:
           - flavor: ["sctransformv2"]
@@ -189,7 +201,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: f913675 
+          commit: 984d35a
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch"]
@@ -201,7 +213,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 444a80b
+          commit: f201861
           entrypoint: select
         parameters:
           - number_selected: 2000
@@ -225,8 +237,8 @@ stages:
     inputs:
       - normalized_selected_h5
     outputs:
-      - id: pcas_tsv
-        path: "{dataset}_pcas.tsv"
+      - id: embedding_tsv
+        path: "{dataset}_embedding.tsv"
       - id: loadings_tsv
         path: "{dataset}_loadings.tsv"
     modules:
@@ -238,10 +250,15 @@ stages:
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 53eb292
+          commit: b41bf43
           entrypoint: pca
         parameters:
-          - solver: [arpack, randomized]
+          - solver: [arpack]
+            dense: "false"
+            n_components: 50
+            random_seed: 42
+          - solver: [randomized]
+            dense: "true"
             n_components: 50
             random_seed: 42
       - id: pc-scrapper
@@ -252,16 +269,140 @@ stages:
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 18843a7
+          commit: f201861
           entrypoint: pca
         parameters:
           - solver: [exact, irlba, random]
             n_components: 50
             random_seed: 42
+      # `--solver` is pinned to the input density it is valid for:
+      # rsc dispatches on density before the solver and would silently
+      # substitute, so our module raises rather than mis-report. Both of these
+      # are the sparse-input solvers. covariance-eigh is the exact control
+      # randomized-halko is seed-sensitive.
+      - id: pc-rapids
+        name: "rapids-singlecell PCA (GPU)"
+        software_environment: "rapids_singlecell"
+        requires_capabilities: [gpu]
+        exclude:
+          - d-feat-sel
+          - d-annotation
+        repository:
+          url: https://github.com/omni-scrna/rapids-singlecell
+          commit: b28deb6
+          entrypoint: pca
+        parameters:
+          - solver: [covariance-eigh, randomized-halko]
+            n_components: 50
+            random_seed: 42
+
+      - id: pc-rcppml
+        name: "RcppML truncated SVD (cpu)"
+        software_environment: "rcppml"
+        exclude:
+          - d-feat-sel
+          - d-annotation
+        repository:
+          url: https://github.com/omni-scrna/rcppml
+          commit: 47a7dd4
+          entrypoint: pca
+        parameters:
+          - solver: [lanczos, krylov]
+            n_components: 50
+            random_seed: 42
+
+      # Same stage, not strictly a PCA: nmf reads and writes the same
+      # with factors named PC1..PCk so the downstream metrics and validators can read
+      # it unchanged.
+      # But, NMF is only defined on non-negative input; needs extra excludes.
+      - id: pc-rcppml-nmf
+        name: "RcppML NMF (cpu)"
+        software_environment: "rcppml"
+        exclude:
+          - d-feat-sel
+          - d-annotation
+          # NMF is only defined on non-negative input, 
+          # That rules out the Pearson-residual normalisations:
+          # nr-seurat (sctransformv2) and nr-scanpy's
+          # analyticalPearsonResiduals. 
+          # TODO: Split nr-scanpy's two flavors into separate module ids to get the log one.
+          - nr-seurat
+          - nr-scanpy
+        repository:
+          url: https://github.com/omni-scrna/rcppml
+          commit: 47a7dd4
+          entrypoint: nmf
+        parameters:
+          - loss: [mse]
+            n_components: 50
+            random_seed: 42
+
+      # GPU variants.
+      # We split so that the DAG can run on GPU-less hosts
+      - id: pc-rcppml-gpu
+        name: "RcppML truncated SVD (GPU)"
+        software_environment: "rcppml"
+        requires_capabilities: [gpu]
+        exclude:
+          - d-feat-sel
+          - d-annotation
+        repository:
+          url: https://github.com/omni-scrna/rcppml
+          commit: 47a7dd4
+          entrypoint: pca
+        parameters:
+          - solver: [lanczos, krylov]
+            n_components: 50
+            random_seed: 42
+            backend: gpu
+
+      - id: pc-rcppml-nmf-gpu
+        name: "RcppML NMF (GPU)"
+        requires_capabilities: [gpu]
+        software_environment: "rcppml"
+        exclude:
+          - d-feat-sel
+          - d-annotation
+          - nr-seurat
+          - nr-scanpy
+        repository:
+          url: https://github.com/omni-scrna/rcppml
+          commit: 47a7dd4
+          entrypoint: nmf
+        parameters:
+          - loss: [mse]
+            n_components: 50
+            random_seed: 42
+            backend: gpu
+
+  - id: ISOMAP
+    resources:
+      cores: 4
+    inputs:
+      - normalized_selected_h5
+    outputs:
+      - id: embedding_tsv
+        path: "{dataset}_embedding.tsv"
+      - id: geodesics_h5
+        path: "{dataset}_geodesics.h5"
+    modules:
+      - id: dr-isomap
+        name: "sklearn (landmark) Isomap"
+        software_environment: "sklearn"
+        repository:
+          url: https://github.com/omni-scrna/sklearn
+          commit: 00d3afc
+          entrypoint: isomap
+        parameters:
+          - n_neighbors: [30]
+            n_components: 50
+            n_landmarks: 1000
+            landmark_method: min-max
+            random_seed: 42
 
   - id: EMBED-M
     inputs:
-      - pcas_tsv
+      - embedding_tsv
       - rawdata_clusters_truth
     outputs:
       - id: embedding_metrics
@@ -272,20 +413,19 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 4cfb831
+          commit: e651115
           entrypoint: embedding-r
       #- id: em-metrics-py
       #  name: "Embedding metrics in python"
       #  software_environment: "metrics"
       #  repository:
       #    url: https://github.com/omni-scrna/metrics
-      #    commit: main 
+      #    commit: main
       #    entrypoint: embedding-py
-
 
   - id: NNG
     inputs:
-      - pcas_tsv
+      - embedding_tsv
     outputs:
       - id: neighbors_h5
         path: "{dataset}_neighbors.h5"
@@ -297,12 +437,25 @@ stages:
           - cntfct
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 53eb292
+          commit: b41bf43
           entrypoint: knn
         parameters:
           - n_neighbors: 15
             random_seed: 42
             flavor: "umap"
+      - id: nn-rapids
+        name: "rapids-singlecell KNN graph (GPU)"
+        software_environment: "rapids_singlecell"
+        requires_capabilities: [gpu]
+        repository:
+          url: https://github.com/omni-scrna/rapids-singlecell
+          commit: b28deb6
+          entrypoint: knn
+        parameters:
+          # rsc.pp.neighbors at the cuVS default
+          - n_neighbors: 15
+            random_seed: 42
+            flavor: "rapids"
 
   - id: GRAPH-M
     inputs:
@@ -343,13 +496,13 @@ stages:
     outputs:
       - id: clusters_tsv
         path: "{dataset}_clusters.tsv"
-    modules: 
+    modules:
       - id: cl-scanpy
         name: "scanpy Leiden clustering"
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 7cf3472
+          commit: b41bf43
           entrypoint: cluster
         parameters:
           - flavor: ["igraph", "leidenalg"]
@@ -387,7 +540,22 @@ stages:
             resolution: [0.5, 1.0]
             walktrap_steps: [2, 4]
             random_seed: 42
-        
+      - id: cl-rapids
+        name: "rapids-singlecell graph clustering (GPU)"
+        software_environment: "rapids_singlecell"
+        requires_capabilities: [gpu]
+        repository:
+          url: https://github.com/omni-scrna/rapids-singlecell
+          commit: b28deb6
+          entrypoint: cluster
+        parameters:
+          - method: "rapids-leiden"
+            resolution: [0.5, 1.0]
+            random_seed: 42
+          # rsc louvain has no seed parameter
+          - method: "rapids-louvain"
+            resolution: [0.5, 1.0]
+
   - id: CLUST-M
     inputs:
       - clusters_tsv
@@ -406,7 +574,7 @@ stages:
 
   - id: INTG8
     inputs:
-      - pcas_tsv
+      - embedding_tsv
       - loadings_tsv
       - normalized_selected_h5
       - rawdata_h5ad
@@ -419,31 +587,31 @@ stages:
         name: "Harmony batch correction"
         software_environment: "integrate"
         exclude:
+          - cntfct
           - d-pca
           - d-annotation
           - d-feat-sel
-          - cntfct
         repository:
           url: https://github.com/omni-scrna/7-integrate
-          commit: d42312a
+          commit: 52c6c64
           entrypoint: harmony-r
         parameters:
           - theta: [0.1, 2]
-      - id: in-seurat
-        name: "Seurat IntegrateLayers batch correction"
-        software_environment: "seurat"
-        exclude:
-          - d-pca
-          - d-annotation
-          - d-feat-sel
-          - cntfct
-        repository:
-          url: https://github.com/omni-scrna/seurat
-          commit: ccb7018
-          entrypoint: integrate
-        parameters:
-          - method: [rpca]
-            k_anchor: [5, 20]
+#      - id: in-seurat
+#        name: "Seurat IntegrateLayers batch correction"
+#        software_environment: "seurat"
+#        exclude:
+#          - d-pca
+#          - d-annotation
+#          - d-feat-sel
+#          - cntfct
+#        repository:
+#          url: https://github.com/omni-scrna/seurat
+#          commit: db6c6ba
+#          entrypoint: integrate
+#        parameters:
+#          - method: [rpca]
+#            k_anchor: [5, 20]
       - id: in-scanorama
         name: "Scanorama batch correction"
         software_environment: "integrate-py"
@@ -454,7 +622,7 @@ stages:
           - cntfct
         repository:
           url: https://github.com/omni-scrna/7-integrate-py
-          commit: 73e3340
+          commit: e005eb5
           entrypoint: scanorama
         parameters:
           - knn: [20]
@@ -466,7 +634,7 @@ stages:
       - rawdata_clusters_truth
       - rawdata_h5ad
       - properties_info
-      - pcas_tsv
+      - embedding_tsv
       - clusters_corrected_tsv
     outputs:
       - id: integration_metrics
@@ -477,23 +645,23 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 4cfb831
+          commit: f0a85a3
           entrypoint: integration-r
         parameters:
-          - k: 20          # knn size for CellMixS cms/entropy/isi (evalIntegration)
-            n_dim: 10      # corrected-embedding dims used as the CellMixS subspace
-            cell_min: 10   # min cells per batch for cms's Anderson-Darling test
-            ldf_k: 75      # knn size for CellMixS ldfDiff (matches ldfDiff's own default)
-            ldf_n_dim: 20  # pre/post dims used for ldfDiff's LDF subspace (matches ldfDiff's own default)
+          - k: 20 # knn size for CellMixS cms/entropy/isi (evalIntegration)
+            n_dim: 10 # corrected-embedding dims used as the CellMixS subspace
+            cell_min: 10 # min cells per batch for cms's Anderson-Darling test
+            ldf_k: 75 # knn size for CellMixS ldfDiff (matches ldfDiff's own default)
+            ldf_n_dim: 20 # pre/post dims used for ldfDiff's LDF subspace (matches ldfDiff's own default)
       - id: in-metrics-py
         name: "Integration metrics in python (scib-metrics + sklearn)"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 4cfb831
+          commit: f0a85a3
           entrypoint: integration-py
         parameters:
-          - n_neighbors: 90  # knn graph size for clisi_knn (pynndescent)
+          - n_neighbors: 90 # knn graph size for clisi_knn (pynndescent)
             random_state: 0 # random seed for the pynndescent approximate KNN search
 
   - id: NNG-C
@@ -508,7 +676,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: a8cc334
+          commit: b41bf43
           entrypoint: knn
         parameters:
           - n_neighbors: 15
@@ -527,7 +695,7 @@ stages:
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: a8cc334
+          commit: b41bf43
           entrypoint: cluster
         parameters:
           - flavor: ["igraph", "leidenalg"]
@@ -536,7 +704,7 @@ stages:
 
   - id: CLUST-E
     inputs:
-      - pcas_tsv
+      - embedding_tsv
     outputs:
       - id: clusters_embedding_tsv
         path: "{dataset}_clusters.tsv"
@@ -546,7 +714,7 @@ stages:
         software_environment: "py_conda"
         repository:
           url: https://github.com/omni-scrna/clustering-py
-          commit: 640c243
+          commit: 8b6a00a
           entrypoint: cluster
         parameters:
           - min_samples: [10, 30, 50]
@@ -561,22 +729,46 @@ stages:
             cluster_method: "xi"
             xi: 0.05
             random_seed: 42
+      - id: cl-rapids-embed
+        name: "rapids-singlecell embedding clustering (GPU)"
+        software_environment: "rapids_singlecell"
+        requires_capabilities: [gpu]
+        repository:
+          url: https://github.com/omni-scrna/rapids-singlecell
+          commit: b28deb6
+          entrypoint: cluster_embedding
+        parameters:
+          - method: "rapids-kmeans"
+            n_clusters: [10, 20]
+            random_seed: 42
+          # hdbscan and dbscan have no seed parameter; 
+          # Both emit -1 for noise points, which CLUST-M has to handle.
+          - method: "rapids-hdbscan"
+            min_samples: [10, 30]
+            min_cluster_size: 25
+          # eps is an absolute distance in PCA space, so it does not transfer
+          # across datasets or n_components. Measured on be1 (50 PCs): kNN
+          # distances run 4.2-35.6, median 11.8 -- eps 0.5/1.0 was below the
+          # closest pair in the data and labelled every cell noise.
+          - method: "rapids-dbscan"
+            eps: [10, 14]
+            min_samples: [10, 30]
 
   - id: ANNO
     inputs:
-    - normalized_selected_h5
+      - normalized_selected_h5
     outputs:
-    - id: annotations_tsv
-      path: '{dataset}_annotations.tsv'
+      - id: annotations_tsv
+        path: "{dataset}_annotations.tsv"
     modules:
-    - id: an-singler
-      name: singler annotation
-      software_environment: annotate
-      repository:
-        url: https://github.com/omni-scrna/9-annotate
-        commit: 439981c
-      parameters:
-        - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
+      - id: an-singler
+        name: singler annotation
+        software_environment: annotate
+        repository:
+          url: https://github.com/omni-scrna/9-annotate
+          commit: 439981c
+        parameters:
+          - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 
   - id: ANNO-M
     inputs:
@@ -593,33 +785,34 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: 4cfb831
           entrypoint: annotation-r
+
   - id: CNTFCT
     resources:
       cores: 4
     inputs:
-    - normalized_selected_h5
-    - rawdata_h5ad
-    - filtered_cellids
+      - normalized_selected_h5
+      - rawdata_h5ad
+      - filtered_cellids
     outputs:
-    - id: pcas_tsv
-      path: '{dataset}_pcas.tsv'
-    - id: loadings_tsv
-      path: '{dataset}_loadings.tsv'  
+      - id: embedding_tsv
+        path: "{dataset}_embedding.tsv"
+      - id: loadings_tsv
+        path: "{dataset}_loadings.tsv"
     modules:
-    - id: cntfct
-      name: count-factor
-      software_environment: count-factor
-      repository:
-        url: https://github.com/omni-scrna/count-factor
-        commit: multi-methods 
-      parameters:
-      - factorization_type: ["newwave", "scgbm", "glmpca"]
-        n_dim: 4
-        random_seed: 42
+      - id: cntfct
+        name: count-factor
+        software_environment: count-factor
+        repository:
+          url: https://github.com/omni-scrna/count-factor
+          commit: ec9badb
+        parameters:
+          - factorization_type: ["newwave", "scgbm", "glmpca"]
+            n_dim: 4
+            random_seed: 42
 
   - id: NORM-M
     inputs:
-      - pcas_tsv
+      - embedding_tsv
       - size_factor_tsv
     outputs:
       - id: normalization_metrics
@@ -630,5 +823,5 @@ stages:
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 88f754c
+          commit: c8d28ac
           entrypoint: normalization-r
