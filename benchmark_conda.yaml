@@ -481,13 +481,15 @@ stages:
     outputs:
       - id: geometry_metrics
         path: "{dataset}_geometry_metrics.json"
+      - id: geometry_pair_summary
+        path: "{dataset}_geometry_pair_summary.tsv"
     modules:
       - id: geometry-metrics-py
         name: "Pairwise representation geometry metrics"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 73c6a60
+          commit: 5efe857
           entrypoint: geometry-py
 
   - id: CLUST
