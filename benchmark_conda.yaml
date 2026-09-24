@@ -4,7 +4,7 @@ description: This benchmark lays out stages for each step of an scRNA-seq pipeli
 benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
 
 # Benchmark configuration
-version: "0.1.0"
+version: "0.1.1"
 api_version: "0.4.0"
 
 provenance:
@@ -269,10 +269,10 @@ stages:
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: f201861
+          commit: d641869
           entrypoint: pca
         parameters:
-          - solver: [exact, irlba, random]
+          - solver: [irlba]
             n_components: 50
             random_seed: 42
       # `--solver` is pinned to the input density it is valid for:
