@@ -144,7 +144,7 @@ stages:
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: f201861
+          commit: adjust-filtering
           entrypoint: filter
 
   - id: NORM
@@ -580,21 +580,21 @@ stages:
           entrypoint: harmony-r
         parameters:
           - theta: [0.1, 2]
-#      - id: in-seurat
-#        name: "Seurat IntegrateLayers batch correction"
-#        software_environment: "seurat"
-#        exclude:
-#          - d-pca
-#          - d-annotation
-#          - d-feat-sel
-#          - cntfct
-#        repository:
-#          url: https://github.com/omni-scrna/seurat
-#          commit: db6c6ba
-#          entrypoint: integrate
-#        parameters:
-#          - method: [rpca]
-#            k_anchor: [5, 20]
+      - id: in-seurat
+        name: "Seurat IntegrateLayers batch correction"
+        software_environment: "seurat"
+        exclude:
+          - d-pca
+          - d-annotation
+          - d-feat-sel
+          - cntfct
+        repository:
+          url: https://github.com/omni-scrna/seurat
+          commit: db6c6ba
+          entrypoint: integrate
+        parameters:
+          - method: [rpca]
+            k_anchor: [5, 20]
       - id: in-scanorama
         name: "Scanorama batch correction"
         software_environment: "integrate-py"
