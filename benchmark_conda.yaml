@@ -275,10 +275,10 @@ stages:
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: f201861
+          commit: d641869
           entrypoint: pca
         parameters:
-          - solver: [exact, irlba, random]
+          - solver: [irlba]
             n_components: 50
             random_seed: 42
       # `--solver` is pinned to the input density it is valid for:
