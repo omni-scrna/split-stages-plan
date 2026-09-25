@@ -385,9 +385,6 @@ stages:
   # normalized matrix (no FEAT step), for methods that pick their own dimension
   # and need the noise genes for it. Same output ids as PCA, so downstream
   # stages consume it like any other embedding.
-  # {dataset}, not {name}, in the paths: at 0.4.0 the runtime passes the dataset
-  # id as --name, while {name} in a template is the module id. Move to {name}
-  # with the bump to api >= 0.5.0.
   - id: NDIMR
     resources:
       cores: 4
@@ -411,7 +408,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/omni-randomly
-          commit: db44d01
+          commit: eb859d9
           entrypoint: ndimr
         parameters:
           - random_seed: 42
@@ -423,7 +420,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/omni-randomly
-          commit: db44d01
+          commit: eb859d9
           entrypoint: ndimr
         parameters:
           - random_seed: 42
