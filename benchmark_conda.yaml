@@ -71,6 +71,9 @@ software_environments:
   scvi:
     name: scvi-tools (CPU)
     conda: envs/scvi.yml
+  sclens:
+    name: scLENS (julia + denet from almost-conductor; Julia deps via Pkg on first run)
+    conda: envs/sclens.yml
 
 stages:
   - id: DATA
@@ -865,6 +868,20 @@ stages:
             n_latent: 10
             max_epochs: 400
             random_seed: 42
+      # scLENS (Kim et al. 2024, Nat Commun): L1 + log normalization, an RMT cut
+      # against a shuffled null, then a perturbation test on what survives, so k
+      # is derived. Every FILT gene; drops genes in < 15 cells, never cells.
+      # GPU-only: upstream crashes on CPU when cells > genes.
+      - id: rd-sclens
+        name: "scLENS RMT signal detection (GPU)"
+        software_environment: "sclens"
+        requires_capabilities: [gpu]
+        repository:
+          url: https://github.com/omni-scrna/omni-sclens
+          commit: 83b6535
+          entrypoint: pca
+        parameters:
+          - random_seed: 42
 
   - id: NORM-M
     inputs:
