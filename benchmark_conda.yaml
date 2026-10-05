@@ -878,7 +878,7 @@ stages:
         requires_capabilities: [gpu]
         repository:
           url: https://github.com/omni-scrna/omni-sclens
-          commit: 2b0f79b
+          commit: a8856f5
           entrypoint: pca
         parameters:
           - random_seed: 42
