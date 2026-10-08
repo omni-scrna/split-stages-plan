@@ -304,6 +304,7 @@ stages:
           - solver: [covariance-eigh, randomized-halko]
             n_components: 50
             random_seed: 42
+            dtype: float64
 
       - id: pc-rcppml
         name: "RcppML truncated SVD (cpu)"
