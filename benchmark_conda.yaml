@@ -4,7 +4,7 @@ description: This benchmark lays out stages for each step of an scRNA-seq pipeli
 benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
 
 # Benchmark configuration
-version: "0.2.0"
+version: "0.2.1"
 api_version: "0.4.0"
 
 provenance:
@@ -74,6 +74,12 @@ software_environments:
   sclens:
     name: scLENS (julia + denet from almost-conductor; Julia deps via Pkg on first run)
     conda: envs/sclens.yml
+  randomly:
+    name: randomly (RMT dimensionality reduction)
+    conda: envs/randomly.yml
+  randomly_gpu:
+    name: randomly GPU (cupy eigh; linux-64, CUDA 12)
+    conda: envs/randomly-gpu.yml
 
 stages:
   - id: DATA
@@ -383,6 +389,51 @@ stages:
             n_components: 50
             random_seed: 42
             backend: gpu
+
+  # NDIMR: normalized dimensionality reduction. Like PCA, but on the full
+  # normalized matrix (no FEAT step), for methods that pick their own dimension
+  # and need the noise genes for it. Same output ids as PCA, so downstream
+  # stages consume it like any other embedding.
+  - id: NDIMR
+    resources:
+      cores: 4
+    inputs:
+      - normalized_h5
+    outputs:
+      - id: embedding_tsv
+        path: "{dataset}_embedding.tsv"
+      - id: loadings_tsv
+        path: "{dataset}_loadings.tsv"
+    modules:
+      # Random Matrix Theory denoising (Aparicio et al. 2020): PCA on the gene
+      # correlation matrix, keeping the components above the Tracy-Widom edge,
+      # so k is decided by the data, not fixed at 50.
+      # O(n_cells^2) memory, O(n_cells^3) time; refuses more than 40000 cells on
+      # CPU (~60 GB). nd-randomly-gpu is bounded by VRAM instead.
+      - id: nd-randomly
+        name: "randomly RMT dimensionality reduction"
+        software_environment: "randomly"
+        exclude:
+          - d-pca
+        repository:
+          url: https://github.com/omni-scrna/omni-randomly
+          commit: eb859d9
+          entrypoint: ndimr
+        parameters:
+          - random_seed: 42
+      - id: nd-randomly-gpu
+        name: "randomly RMT dimensionality reduction (cupy eigh)"
+        software_environment: "randomly_gpu"
+        requires_capabilities: [gpu]
+        exclude:
+          - d-pca
+        repository:
+          url: https://github.com/omni-scrna/omni-randomly
+          commit: eb859d9
+          entrypoint: ndimr
+        parameters:
+          - random_seed: 42
+            backend: cupy
 
   - id: ISOMAP
     resources:
