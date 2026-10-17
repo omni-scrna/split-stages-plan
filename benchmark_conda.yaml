@@ -34,6 +34,9 @@ software_environments:
   seurat:
     name: seurat multi-module
     conda: envs/seurat.yml
+  sam:
+    name: SAM (sc-sam)
+    conda: envs/sam.yml
   metrics:
     name: metrics env
     conda: envs/metrics.yaml
@@ -238,6 +241,18 @@ stages:
         parameters:
           - flavor: ["pearson_residuals"]
             number_selected: 2000
+      - id: fe-sam
+        name: "SAM gene selection"
+        software_environment: "sam"
+        exclude:
+          - d-pca
+        repository:
+          url: https://github.com/omni-scrna/omni-sam
+          commit: 751cb44
+          entrypoint: select
+        parameters:
+          - number_selected: 2000
+            random_seed: 0
           #- flavor: ["pearson_residuals", "scanpy_seurat", "scanpy_cell_ranger"]
 
   - id: PCA
