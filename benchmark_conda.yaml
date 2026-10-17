@@ -248,7 +248,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/omni-sam
-          commit: 751cb44
+          commit: a1bad92
           entrypoint: select
         parameters:
           - number_selected: 2000
