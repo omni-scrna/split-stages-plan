@@ -1,0 +1,283 @@
+name: feat-sam
+id: feat_sam
+description: 'Exploratory check for the SAM FEAT arm on small Duo 2018 datasets: FEAT
+  expanded, one exact PCA, embeddings scored by the supervised oracle ceiling and by Leiden ARI.'
+benchmarker: Ben <ben.uzh@proton.me>
+version: 0.1.0
+api_version: 0.4.0
+software_backend: conda
+software_environments:
+  r_conda:
+    name: R conda env
+    conda: ../envs/r.yml
+  omni_data:
+    name: omni-data fixture loader
+    conda: omni-data-pinned.yml
+  py_conda:
+    name: Python conda env
+    conda: ../envs/py.yml
+  scanpy:
+    name: scanpy multi-module
+    conda: ../envs/scanpy.yml
+  scrapper:
+    name: scrapper multi-module
+    conda: ../envs/scrapper.yml
+  metrics:
+    name: metrics env
+    conda: ../envs/metrics.yaml
+  seurat:
+    name: Seurat multi-module
+    conda: ../envs/seurat.yml
+  sam:
+    name: SAM (sc-sam)
+    conda: ../envs/sam.yml
+stages:
+- id: DATA
+  outputs:
+  - id: rawdata_h5ad
+    path: '{dataset}.h5ad'
+  - id: rawdata_clusters_truth
+    path: '{dataset}.clusters_truth.tsv'
+  - id: rawdata_clusters_truth_num
+    path: '{dataset}.clusters_truth_num.txt'
+  - id: properties_info
+    path: '{dataset}_properties.yaml'
+  modules:
+  - id: duo-koh
+    name: Duo 2018 koh
+    software_environment: omni_data
+    repository:
+      url: https://github.com/btraven00/omni-data
+      commit: 80611e83d13c8bd0d15fbc033c6a5e1a7900a0b8
+    parameters:
+    - uri: file:///home/b/phd/data/duo_omnidata/duo-koh/
+      uri_type: directory
+  - id: duo-kumar
+    name: Duo 2018 kumar
+    software_environment: omni_data
+    repository:
+      url: https://github.com/btraven00/omni-data
+      commit: 80611e83d13c8bd0d15fbc033c6a5e1a7900a0b8
+    parameters:
+    - uri: file:///home/b/phd/data/duo_omnidata/duo-kumar/
+      uri_type: directory
+  - id: duo-simkumar8hard
+    name: Duo 2018 simkumar8hard
+    software_environment: omni_data
+    repository:
+      url: https://github.com/btraven00/omni-data
+      commit: 80611e83d13c8bd0d15fbc033c6a5e1a7900a0b8
+    parameters:
+    - uri: file:///home/b/phd/data/duo_omnidata/duo-simkumar8hard/
+      uri_type: directory
+  - id: duo-zhengmix4eq
+    name: Duo 2018 zhengmix4eq
+    software_environment: omni_data
+    repository:
+      url: https://github.com/btraven00/omni-data
+      commit: 80611e83d13c8bd0d15fbc033c6a5e1a7900a0b8
+    parameters:
+    - uri: file:///home/b/phd/data/duo_omnidata/duo-zhengmix4eq/
+      uri_type: directory
+  - id: duo-zhengmix8eq
+    name: Duo 2018 zhengmix8eq
+    software_environment: omni_data
+    repository:
+      url: https://github.com/btraven00/omni-data
+      commit: 80611e83d13c8bd0d15fbc033c6a5e1a7900a0b8
+    parameters:
+    - uri: file:///home/b/phd/data/duo_omnidata/duo-zhengmix8eq/
+      uri_type: directory
+- id: FILT
+  inputs:
+  - rawdata_h5ad
+  - properties_info
+  outputs:
+  - id: filtered_cellids
+    path: '{dataset}_cellids.txt.gz'
+  - id: filtered_featureids
+    path: '{dataset}_featureids.txt.gz'
+  - id: size_factor_tsv
+    path: '{dataset}_size_factors.tsv'
+  modules:
+  - id: fi-scrapper
+    name: scrapper-style filtering
+    software_environment: scrapper
+    repository:
+      url: https://github.com/omni-scrna/scrapper
+      commit: f201861
+      entrypoint: filter
+- id: NORM
+  inputs:
+  - rawdata_h5ad
+  - filtered_cellids
+  - filtered_featureids
+  outputs:
+  - id: normalized_h5
+    path: '{dataset}_normalized.h5'
+  modules:
+  - id: nr-scanpy
+    name: Python-based scRNA-seq normalization methods
+    software_environment: py_conda
+    repository:
+      url: https://github.com/omni-scrna/scanpy
+      commit: b5c6855
+      entrypoint: normalize
+    parameters:
+    - flavor:
+      - log1pCP10k
+- id: FEAT
+  inputs:
+  - rawdata_h5ad
+  - normalized_h5
+  - filtered_cellids
+  - filtered_featureids
+  - properties_info
+  outputs:
+  - id: normalized_selected_h5
+    path: '{dataset}_normalized_selected.h5'
+  modules:
+  - id: fe-scanpy
+    name: scanpy-based gene selection
+    software_environment: scanpy
+    repository:
+      url: https://github.com/omni-scrna/scanpy
+      commit: 2a56c14
+      entrypoint: feat-select
+    parameters:
+    - flavor:
+      - scanpy_seurat
+      - pearson_residuals
+      number_selected: 2000
+  - id: fe-scrapper
+    name: scrapper-based gene selection
+    software_environment: scrapper
+    repository:
+      url: https://github.com/omni-scrna/scrapper
+      commit: f201861
+      entrypoint: select
+    parameters:
+    - number_selected: 2000
+  - id: fe-seurat
+    name: seurat-based gene selection
+    software_environment: seurat
+    repository:
+      url: https://github.com/omni-scrna/seurat
+      commit: db6c6ba
+      entrypoint: select
+    parameters:
+    - selection_type:
+      - seurat_vst
+      number_selected: 2000
+  - id: fe-sam
+    name: SAM gene selection
+    software_environment: sam
+    repository:
+      url: https://github.com/omni-scrna/sam
+      commit: 5fff77d
+      entrypoint: select
+    parameters:
+    - number_selected: 2000
+      random_seed:
+      - 0
+      - 1
+- id: PCA
+  inputs:
+  - normalized_selected_h5
+  outputs:
+  - id: embedding_tsv
+    path: '{dataset}_embedding.tsv'
+  - id: loadings_tsv
+    path: '{dataset}_loadings.tsv'
+  modules:
+  - id: pc-scanpy
+    name: scanpy PCA
+    software_environment: scanpy
+    repository:
+      url: https://github.com/omni-scrna/scanpy
+      commit: b41bf43
+      entrypoint: pca
+    parameters:
+    - solver: arpack
+      dense: 'false'
+      n_components: 50
+      random_seed: 1
+- id: NNG
+  inputs:
+  - embedding_tsv
+  outputs:
+  - id: neighbors_h5
+    path: '{dataset}_neighbors.h5'
+  modules:
+  - id: nn-scanpy
+    name: scanpy KNN graph
+    software_environment: scanpy
+    repository:
+      url: https://github.com/omni-scrna/scanpy
+      commit: b41bf43
+      entrypoint: knn
+    parameters:
+    - n_neighbors: 15
+      flavor: umap
+      random_seed: 42
+- id: CLUST
+  inputs:
+  - neighbors_h5
+  outputs:
+  - id: clusters_tsv
+    path: '{dataset}_clusters.tsv'
+  modules:
+  - id: cl-scanpy
+    name: scanpy Leiden clustering
+    software_environment: scanpy
+    repository:
+      url: https://github.com/omni-scrna/scanpy
+      commit: b41bf43
+      entrypoint: cluster
+    parameters:
+    - flavor: igraph
+      resolution:
+      - 0.2
+      - 0.5
+      - 1.0
+      random_seed:
+      - 1
+      - 2
+      - 3
+- id: CLUSTBOUND
+  inputs:
+  - embedding_tsv
+  - rawdata_clusters_truth
+  outputs:
+  - id: clusters_tsv
+    path: '{dataset}_clusters.tsv'
+  modules:
+  - id: cb-oracle
+    name: Supervised ceiling
+    software_environment: metrics
+    repository:
+      url: /home/b/lab/omni-scrna/split-stages-plan-modules/metrics
+      commit: bc998fb
+      entrypoint: bounds-py
+    parameters:
+    - bound: oracle
+      classifier:
+      - logreg
+      - knn
+      n_splits: 5
+      random_seed: 42
+- id: CLUST-M
+  inputs:
+  - clusters_tsv
+  - rawdata_clusters_truth
+  outputs:
+  - id: cluster_metrics
+    path: '{dataset}_cluster_metrics.json'
+  modules:
+  - id: cl-metrics-r
+    name: Partition metrics in R
+    software_environment: metrics
+    repository:
+      url: /home/b/lab/omni-scrna/split-stages-plan-modules/metrics
+      commit: bc998fb
+      entrypoint: cluster-r
