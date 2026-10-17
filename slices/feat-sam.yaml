@@ -174,13 +174,16 @@ stages:
     software_environment: sam
     repository:
       url: https://github.com/omni-scrna/sam
-      commit: 5fff77d
+      commit: 6e736b3
       entrypoint: select
     parameters:
     - number_selected: 2000
       random_seed:
       - 0
       - 1
+      thresh_high:
+      - 0.96
+      - 1.0
 - id: PCA
   inputs:
   - normalized_selected_h5
