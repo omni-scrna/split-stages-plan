@@ -210,7 +210,7 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 984d35a
+          commit: a83045e
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch", "mixhvg"]
