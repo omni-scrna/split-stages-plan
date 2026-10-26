@@ -233,10 +233,10 @@ stages:
           - d-pca
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 2a56c14
+          commit: 3076328
           entrypoint: feat-select
         parameters:
-          - flavor: ["pearson_residuals"]
+          - flavor: ["pearson_residuals", "scanpy_seurat_v3"]
             number_selected: 2000
           #- flavor: ["pearson_residuals", "scanpy_seurat", "scanpy_cell_ranger"]
 
