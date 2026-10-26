@@ -213,7 +213,7 @@ stages:
           commit: 984d35a
           entrypoint: select
         parameters:
-          - selection_type: ["seurat_vst", "seurat_vst_batch"]
+          - selection_type: ["seurat_vst", "seurat_vst_batch", "mixhvg"]
             number_selected: 2000
       - id: fe-scrapper
         name: "scrapper-based gene selection"
