@@ -1,0 +1,20 @@
+# slices benchmark_conda.yaml into something smaller to focus on PCA
+picks:
+  DATA:
+    d-pca: all
+  FILT:
+    fi-scrapper: all
+  NORM:
+    nr-scrapper: all
+  FEAT:
+    fe-scrapper: all
+  PCA:
+    pc-rapids: all
+    pc-scanpy: all
+    pc-scrapper: all
+#    pc-rcppml: all
+#    pc-rcppml-gpu: all
+#    pc-rcppml-nmf: all
+#    pc-rcppml-nmf-gpu: all
+#  NNG:
+#    nn-scanpy: all
