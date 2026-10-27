@@ -302,12 +302,15 @@ stages:
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b28deb6
+          commit: add-dianas
           entrypoint: pca
         parameters:
-          - solver: [covariance-eigh, randomized-halko]
+          - solver: [rapids-randomized, rapids-exact]
             n_components: 50
             random_seed: 42
+            n_iter: 2
+            n_oversamples: 10
+         #- solver: [covariance-eigh, randomized-halko]
 
       - id: pc-rcppml
         name: "RcppML truncated SVD (cpu)"
