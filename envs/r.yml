@@ -15,6 +15,7 @@ dependencies:
   - bioconductor-scrnaseq
   - bioconductor-scrapper
   - bioconductor-scuttle
+  - bioconductor-scrnaseq
   - r-argparser
   - r-stringr
   - r-yaml

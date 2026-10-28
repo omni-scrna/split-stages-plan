@@ -74,7 +74,7 @@ mkdir -p logs
 # ==============================================================================
 
 # Example: run a script
-ob run --filter pca-filter.yaml --until PCA benchmark_conda.yaml -c 8 --with-capability gpu --unpinned
+ob run --filter pca-filter.yaml --until CLUST benchmark_conda.yaml -c 8 --with-capability gpu --unpinned
 #ob run benchmark_minimal.yaml -c 48 --with-capability gpu --unpinned
 
 # ==============================================================================

@@ -107,12 +107,16 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 4e4f1a5
+          commit: add-dianas
         parameters:
           - dataset_name: "sc-mix"
             batch_var: null
             labels_var: cell_line
             sample_var: null
+          - dataset_name: "Zilioni"
+            batch_var: Patient
+            labels_var: clusters.truth
+            sample_var: Patient
       - id: d-feat-sel
         name: "R-based dataset downloads (feature selection collection)"
         software_environment: r_conda
@@ -523,9 +527,12 @@ stages:
           commit: b41bf43
           entrypoint: cluster
         parameters:
-          - flavor: ["igraph", "leidenalg"]
+          - flavor: ["leidenalg"]
             resolution: [0.5, 1.0]
             random_seed: 42
+          #- flavor: ["igraph", "leidenalg"]
+          #  resolution: [0.5, 1.0]
+          #  random_seed: 42
       - id: cl-seurat
         name: "Seurat clustering"
         software_environment: "seurat"
