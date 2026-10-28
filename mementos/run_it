@@ -9,3 +9,8 @@ ob run benchmark_minimal.yaml -c 30 --unpinned --with-capability gpu --continue-
 prlimit --rss=64g --cpu=10000 ob run benchmark_minimal.yaml -c 8 --unpinned --continue-on-error
 prlimit --rss=64g --cpu=10000 ob run benchmark_conda.yaml -c 8 --unpinned --continue-on-error
 #ob run benchmark_conda.yaml -c 16 -k --unpinned --telemetry --telemetry-output ./telem.jsonl
+
+# run with filter to PCA stage
+ob run --filter pca-filter.yaml --until PCA benchmark_conda.yaml -c 8
+ob run --filter pca-filter.yaml --until PCA benchmark_conda.yaml -c 8 --with-capability gpu --unpinned
+ob run --filter pca-filter.yaml --until CLUST benchmark_conda.yaml -c 8 --with-capability gpu --unpinned

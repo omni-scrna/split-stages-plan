@@ -107,12 +107,16 @@ stages:
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 4e4f1a5
+          commit: add-dianas
         parameters:
           - dataset_name: "sc-mix"
             batch_var: null
             labels_var: cell_line
             sample_var: null
+          - dataset_name: "Zilioni"
+            batch_var: Patient
+            labels_var: clusters.truth
+            sample_var: Patient
       - id: d-feat-sel
         name: "R-based dataset downloads (feature selection collection)"
         software_environment: r_conda
@@ -218,8 +222,6 @@ stages:
       - id: fe-scrapper
         name: "scrapper-based gene selection"
         software_environment: "scrapper"
-        exclude:
-          - d-pca
         repository:
           url: https://github.com/omni-scrna/scrapper
           commit: f201861
@@ -259,17 +261,21 @@ stages:
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: b41bf43
+          commit: add-dianas
           entrypoint: pca
         parameters:
           - solver: [arpack]
             dense: "false"
             n_components: 50
             random_seed: 42
+            n_iter: 2
+            n_oversamples: 10
           - solver: [randomized]
             dense: "true"
             n_components: 50
             random_seed: 42
+            n_iter: 2
+            n_oversamples: 10
       - id: pc-scrapper
         name: "scrapper PCA"
         software_environment: "scrapper"
@@ -278,12 +284,14 @@ stages:
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: d641869
+          commit: add-dianas
           entrypoint: pca
         parameters:
-          - solver: [irlba]
+          - solver: [irlba]  # random, exact
             n_components: 50
             random_seed: 42
+            n_iter: 2
+            n_oversamples: 10
       # `--solver` is pinned to the input density it is valid for:
       # rsc dispatches on density before the solver and would silently
       # substitute, so our module raises rather than mis-report. Both of these
@@ -298,12 +306,15 @@ stages:
           - d-annotation
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b28deb6
+          commit: add-dianas
           entrypoint: pca
         parameters:
-          - solver: [covariance-eigh, randomized-halko]
+          - solver: [rapids-randomized, rapids-exact]
             n_components: 50
             random_seed: 42
+            n_iter: 2
+            n_oversamples: 10
+         #- solver: [covariance-eigh, randomized-halko]
 
       - id: pc-rcppml
         name: "RcppML truncated SVD (cpu)"
@@ -516,9 +527,12 @@ stages:
           commit: b41bf43
           entrypoint: cluster
         parameters:
-          - flavor: ["igraph", "leidenalg"]
+          - flavor: ["leidenalg"]
             resolution: [0.5, 1.0]
             random_seed: 42
+          #- flavor: ["igraph", "leidenalg"]
+          #  resolution: [0.5, 1.0]
+          #  random_seed: 42
       - id: cl-seurat
         name: "Seurat clustering"
         software_environment: "seurat"
