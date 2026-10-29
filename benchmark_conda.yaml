@@ -289,7 +289,7 @@ stages:
         parameters:
           - solver: [irlba] 
             n_components: 50
-            random_seed: [6, 7, 29, 42, 78]
+            random_seed: [42, 78]
             n_iter: 2
             n_oversamples: 10
           - solver: [exact]  
@@ -315,7 +315,7 @@ stages:
             n_components: 50
           - solver: [rapids-randomized]
             n_components: 50
-            random_seed: [6, 7, 29, 42, 78]
+            random_seed: [42, 78]
             n_iter: 2
             n_oversamples: 10
          #- solver: [covariance-eigh, randomized-halko]
@@ -465,7 +465,7 @@ stages:
           entrypoint: knn
         parameters:
           - n_neighbors: 15
-            random_seed: [6, 7, 29, 42, 78]
+            random_seed: [42, 78]
             flavor: "umap"
       - id: nn-rapids
         name: "rapids-singlecell KNN graph (GPU)"
@@ -533,7 +533,7 @@ stages:
         parameters:
           - flavor: ["igraph"]
             resolution: [0.5, 1.0]
-            random_seed: [6, 7, 29, 42, 78]
+            random_seed: [42, 78]
           #- flavor: ["igraph", "leidenalg"]
           #  resolution: [0.5, 1.0]
           #  random_seed: 42
@@ -677,10 +677,10 @@ stages:
           commit: 2b9b1a3
           entrypoint: integration-r
         parameters:
-          - k: 20 # knn size for CellMixS cms/entropy/isi (evalIntegration)
-            n_dim: 10 # corrected-embedding dims used as the CellMixS subspace
-            cell_min: 10 # min cells per batch for cms's Anderson-Darling test
-            ldf_k: 75 # knn size for CellMixS ldfDiff (matches ldfDiff's own default)
+          - k: 20         # knn size for CellMixS cms/entropy/isi (evalIntegration)
+            n_dim: 10     # corrected-embedding dims used as the CellMixS subspace
+            cell_min: 10  # min cells per batch for cms's Anderson-Darling test
+            ldf_k: 75     # knn size for CellMixS ldfDiff (matches ldfDiff's own default)
             ldf_n_dim: 20 # pre/post dims used for ldfDiff's LDF subspace (matches ldfDiff's own default)
       - id: in-metrics-py
         name: "Integration metrics in python (scib-metrics + sklearn)"
