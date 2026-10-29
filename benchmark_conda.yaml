@@ -287,11 +287,13 @@ stages:
           commit: add-dianas
           entrypoint: pca
         parameters:
-          - solver: [irlba]  # random, exact
+          - solver: [irlba] 
             n_components: 50
             random_seed: [6, 7, 29, 42, 78]
             n_iter: 2
             n_oversamples: 10
+          - solver: [exact]  
+            n_components: 50
       # `--solver` is pinned to the input density it is valid for:
       # rsc dispatches on density before the solver and would silently
       # substitute, so our module raises rather than mis-report. Both of these
@@ -309,7 +311,9 @@ stages:
           commit: add-dianas
           entrypoint: pca
         parameters:
-          - solver: [rapids-randomized, rapids-exact]
+          - solver: [rapids-exact]
+            n_components: 50
+          - solver: [rapids-randomized]
             n_components: 50
             random_seed: [6, 7, 29, 42, 78]
             n_iter: 2
