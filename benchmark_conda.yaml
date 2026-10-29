@@ -267,13 +267,13 @@ stages:
           - solver: [arpack]
             dense: "false"
             n_components: 50
-            random_seed: 42
+            random_seed: [6, 7, 29, 42, 78]
             n_iter: 2
             n_oversamples: 10
           - solver: [randomized]
             dense: "true"
             n_components: 50
-            random_seed: 42
+            random_seed: [6, 7, 29, 42, 78]
             n_iter: 2
             n_oversamples: 10
       - id: pc-scrapper
@@ -289,7 +289,7 @@ stages:
         parameters:
           - solver: [irlba]  # random, exact
             n_components: 50
-            random_seed: 42
+            random_seed: [6, 7, 29, 42, 78]
             n_iter: 2
             n_oversamples: 10
       # `--solver` is pinned to the input density it is valid for:
@@ -311,7 +311,7 @@ stages:
         parameters:
           - solver: [rapids-randomized, rapids-exact]
             n_components: 50
-            random_seed: 42
+            random_seed: [6, 7, 29, 42, 78]
             n_iter: 2
             n_oversamples: 10
          #- solver: [covariance-eigh, randomized-halko]
@@ -461,7 +461,7 @@ stages:
           entrypoint: knn
         parameters:
           - n_neighbors: 15
-            random_seed: 42
+            random_seed: [6, 7, 29, 42, 78]
             flavor: "umap"
       - id: nn-rapids
         name: "rapids-singlecell KNN graph (GPU)"
@@ -527,9 +527,9 @@ stages:
           commit: b41bf43
           entrypoint: cluster
         parameters:
-          - flavor: ["leidenalg"]
+          - flavor: ["igraph"]
             resolution: [0.5, 1.0]
-            random_seed: 42
+            random_seed: [6, 7, 29, 42, 78]
           #- flavor: ["igraph", "leidenalg"]
           #  resolution: [0.5, 1.0]
           #  random_seed: 42

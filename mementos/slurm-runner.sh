@@ -15,7 +15,7 @@
 # --- CPUs & memory ---
 #SBATCH --nodes=1                    # Number of nodes
 #SBATCH --ntasks=1                   # Number of tasks (MPI ranks)
-#SBATCH --cpus-per-task=10           # CPU cores per task
+#SBATCH --cpus-per-task=20           # CPU cores per task
 #SBATCH --mem=100G                   # Total memory per node (e.g. 8G, 32G)
 # --mem-per-cpu=4G                   # Alternative: memory per CPU core
 
@@ -74,7 +74,7 @@ mkdir -p logs
 # ==============================================================================
 
 # Example: run a script
-ob run --filter pca-filter.yaml --until CLUST benchmark_conda.yaml -c 8 --with-capability gpu --unpinned
+ob run --filter pca-filter.yaml --until CLUST benchmark_conda.yaml -c 20 --with-capability gpu --unpinned --continue-on-error
 #ob run benchmark_minimal.yaml -c 48 --with-capability gpu --unpinned
 
 # ==============================================================================
