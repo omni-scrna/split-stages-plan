@@ -23,6 +23,8 @@ validate_file <- function(path) {
   if (ok) {
     message(sprintf("OK\t%s", path))
   }
+  ok
 }
 
-invisible(lapply(args, validate_file))
+ok <- vapply(args, validate_file, logical(1))
+if (!all(ok)) quit(status = 1)
