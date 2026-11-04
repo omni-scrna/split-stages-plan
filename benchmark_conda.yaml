@@ -80,6 +80,9 @@ stages:
     outputs:
       - id: rawdata_h5ad
         path: "{dataset}.h5ad"
+        validators:
+          - script: validators/DATA/rawdata_h5ad/validate.py
+          - script: validators/DATA/rawdata_h5ad/sparse.py
       - id: rawdata_clusters_truth
         path: "{dataset}.clusters_truth.tsv"
       - id: rawdata_clusters_truth_num
@@ -164,6 +167,8 @@ stages:
     outputs:
       - id: normalized_h5
         path: "{dataset}_normalized.h5"
+        validators:
+          - script: validators/NORM/normalized_h5/validate.py
     modules:
       - id: nr-scrapper
         name: "scrapper-based normalization"
@@ -248,6 +253,8 @@ stages:
     outputs:
       - id: embedding_tsv
         path: "{dataset}_embedding.tsv"
+        validators:
+          - script: validators/PCA/embedding_tsv/validate.R
       - id: loadings_tsv
         path: "{dataset}_loadings.tsv"
     modules:
