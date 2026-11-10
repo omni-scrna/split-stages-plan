@@ -930,11 +930,9 @@ stages:
 
   # PCA_M: every PCA arm vs pc_exact on the same input matrix. ob api 0.8.0 groups
   # by node, so one gather per FEAT node: exactly one pc_exact per group, and the
-  # FEAT node's own matrix comes in as an input (variance explained, parallel analysis).
+  # FEAT node's own matrix comes in as an input (variance explained).
   # embedding_tsv has other producers (ISOMAP, CNTFCT, RDIMR); the module skips them.
   - id: PCA_M
-    resources:
-      cores: 16   # parallel-analysis shuffles run one per core
     inputs:
       - normalized_selected_h5
     gather:
@@ -953,17 +951,31 @@ stages:
           entrypoint: pca-gather
         parameters:
           - reference_module: pc_exact
-            pa_n_perm: 20        # parallel-analysis shuffles per FEAT matrix
-            pa_quantile: 0.95    # Glorfeld 1995
-            random_seed: 42
 
-  # REPORT: one Quarto HTML over every PCA_M table (global gather).
-  - id: REPORT
+  # PCA_RESULTS: every PCA_M table concatenated into one (global gather).
+  - id: PCA_RESULTS
     gather:
-      - from: pca_metrics_tsv
+      from: pca_metrics_tsv
+    outputs:
+      - id: pca_results_tsv
+        path: "results/pca_results.tsv"
+    modules:
+      - id: pca_results
+        name: "PCA metrics, all tables row-bound"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: api-0.8.0
+          entrypoint: pca-results
+
+  # REPORT_PCA: one Quarto HTML over the PCA_RESULTS table -> out/reports/pca.html
+  - id: REPORT_PCA
+    gather:
+      from: pca_results_tsv
+      path: reports
     outputs:
       - id: report_html
-        path: "pca_report.html"
+        path: "pca.html"
     modules:
       - id: pca_report
         name: "PCA accuracy report (Quarto)"

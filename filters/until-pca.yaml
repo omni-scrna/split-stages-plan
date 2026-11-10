@@ -8,4 +8,5 @@ picks:
   FEAT: {'*': first}
   PCA:  {'*': first}
   PCA_M: {'*': all}   # gathers must keep a producer or the DAG fails
-  REPORT: {'*': all}
+  PCA_RESULTS: {'*': all}
+  REPORT_PCA: {'*': all}

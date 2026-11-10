@@ -1,5 +1,5 @@
 # CI fixture run: the be1 fixture (ci/fixture-plan.sh), first combo per module,
-# DATA..PCA + PCA_M/REPORT, CPU arms only (--filter skips capability pruning, so GPU arms are
+# DATA..PCA + PCA_M/PCA_RESULTS/REPORT_PCA, CPU arms only (--filter skips capability pruning, so GPU arms are
 # left out by name). Usage, after ci/fixture-plan.sh > benchmark_ci.yaml:
 #   ob run benchmark_ci.yaml --filter filters/ci-until-pca.yaml
 picks:
@@ -14,6 +14,7 @@ picks:
     pc_rcppml: first
     pc_rcppml_nmf: first
   # PCA metrics gathers: a filter that cuts every producer of a gathered id
-  # fails the DAG (REPORT has nothing to gather) instead of pruning it.
+  # fails the DAG (REPORT_PCA has nothing to gather) instead of pruning it.
   PCA_M: {'*': all}
-  REPORT: {'*': all}
+  PCA_RESULTS: {'*': all}
+  REPORT_PCA: {'*': all}

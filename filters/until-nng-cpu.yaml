@@ -11,4 +11,5 @@ picks:
   NNG:  {nn_scanpy: first}
   # gathers expand even when unlisted; cutting every producer of a gathered id fails the DAG, so keep them
   PCA_M: {'*': all}
-  REPORT: {'*': all}
+  PCA_RESULTS: {'*': all}
+  REPORT_PCA: {'*': all}

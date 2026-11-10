@@ -1,5 +1,5 @@
 # Slice: be1, CPU arms through NNG, GRAPH_M per graph,
-# PCA_M per FEAT node and the REPORT.
+# PCA_M per FEAT node, PCA_RESULTS and REPORT_PCA.
 # Usage: ob run benchmark_conda.yaml --filter filters/until-graphm-cpu.yaml
 # 44d965bf = d_integration's be1 combo; it changes if that parameter set changes.
 # --filter skips requires_capabilities pruning, so GPU arms (pc_rapids*, nn_rapids) are left out by hand.
@@ -12,4 +12,5 @@ picks:
   NNG:  {nn_scanpy: first}
   GRAPH_M: {'*': all}
   PCA_M: {'*': all}
-  REPORT: {'*': all}
+  PCA_RESULTS: {'*': all}
+  REPORT_PCA: {'*': all}

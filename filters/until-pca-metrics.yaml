@@ -1,4 +1,4 @@
-# be1 up to PCA (CPU + GPU arms + the pc_exact reference), then PCA_M and REPORT.
+# be1 up to PCA (CPU + GPU arms + the pc_exact reference), then PCA_M, PCA_RESULTS and REPORT_PCA.
 # Run on rolandgarros: ob run benchmark_conda.yaml --filter filters/until-pca-metrics.yaml --with-capability gpu
 # 44d965bf = d_integration's be1 combo; it changes if that parameter set changes.
 picks:
@@ -16,4 +16,5 @@ picks:
     pc_rcppml_gpu: first
     pc_rcppml_nmf_gpu: first
   PCA_M: {'*': all}
-  REPORT: {'*': all}
+  PCA_RESULTS: {'*': all}
+  REPORT_PCA: {'*': all}

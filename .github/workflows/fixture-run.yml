@@ -2,7 +2,7 @@ name: Fixture run
 
 # Runs the plan on the tiny committed fixture in fixtures/DATA (ci/fixture-plan.sh
 # swaps DATA for it), selected by filters/ci-until-pca.yaml: first combo per
-# module, DATA..PCA plus the PCA_M/REPORT gathers, CPU arms. Then runs the
+# module, DATA..PCA plus the PCA_M/PCA_RESULTS/REPORT_PCA gathers, CPU arms. Then runs the
 # declared output validators. Proves the modules execute and their stage
 # contracts line up, without the 817 MB real dataset.
 
@@ -69,7 +69,7 @@ jobs:
           path: out_ci/.snakemake/conda
           key: snakemake-conda-${{ runner.os }}-${{ hashFiles('envs/*.yml', 'envs/*.yaml', 'ci/fixture-plan.sh', 'filters/ci-until-pca.yaml') }}
 
-      - name: Run fixture benchmark (DATA..PCA + PCA_M/REPORT)
+      - name: Run fixture benchmark (DATA..PCA + PCA_M/PCA_RESULTS/REPORT_PCA)
         run: |
           pixi run -e plan ob run benchmark_ci.yaml --filter filters/ci-until-pca.yaml \
             --out-dir out_ci --cores 4 --yes

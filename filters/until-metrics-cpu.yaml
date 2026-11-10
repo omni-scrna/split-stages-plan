@@ -1,5 +1,5 @@
 # Slice: be1, CPU arms through CLUST, with EMBED_M, NORM_M, CLUST_M, GRAPH_M per node,
-# PCA_M per FEAT node and the REPORT.
+# PCA_M per FEAT node, PCA_RESULTS and REPORT_PCA.
 # Usage: ob run benchmark_conda.yaml --filter filters/until-metrics-cpu.yaml -- --resources mem_mb=<MB the machine can spare>
 #   (EMBED_M declares 16 GB per job; without the budget 32 cores means 32 jobs = 384 GB)
 # 44d965bf = d_integration's be1 combo; it changes if that parameter set changes.
@@ -17,4 +17,5 @@ picks:
   CLUST_M: {"*": all}
   GRAPH_M: {'*': all}
   PCA_M: {'*': all}
-  REPORT: {'*': all}
+  PCA_RESULTS: {'*': all}
+  REPORT_PCA: {'*': all}
