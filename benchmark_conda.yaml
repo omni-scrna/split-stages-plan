@@ -928,10 +928,9 @@ stages:
           commit: api-0.8.0
           entrypoint: normalization-r
 
-  # PCA_M: every PCA arm vs pc_exact on the same input matrix. ob api 0.8.0 groups
-  # by node, so one gather per FEAT node: exactly one pc_exact per group, and the
-  # FEAT node's own matrix comes in as an input (variance explained).
-  # embedding_tsv has other producers (ISOMAP, CNTFCT, RDIMR); the module skips them.
+  # PCA_M: every PCA arm vs pc_exact on the same input matrix.
+  # one gather per FEAT node: one pc_exact per group, and the
+  # FEAT matrix as input for variance explained.
   - id: PCA_M
     inputs:
       - normalized_selected_h5
@@ -956,9 +955,10 @@ stages:
   - id: PCA_RESULTS
     gather:
       from: pca_metrics_tsv
+      path: results
     outputs:
       - id: pca_results_tsv
-        path: "results/pca_results.tsv"
+        path: "pca_results.tsv"
     modules:
       - id: pca_results
         name: "PCA metrics, all tables row-bound"
