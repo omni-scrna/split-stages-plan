@@ -224,6 +224,7 @@ stages:
           - script: validators/FEAT/normalized_selected_h5/validate.py
     modules:
       - id: fe_seurat
+        # TODO: move the requires to the stage level
         requires: {runs_feat: "yes"}
         name: "seurat-based gene selection"
         software_environment: "seurat"
@@ -313,7 +314,7 @@ stages:
             dense: "true"
             dtype: float64
             n_components: 50
-            random_seed: 42
+            #random_seed: 42
       - id: pc_scrapper
         requires: {runs_pca: "yes"}
         name: "scrapper PCA"
@@ -362,7 +363,6 @@ stages:
       # Same stage, not strictly a PCA: nmf reads and writes the same
       # with factors named PC1..PCk so the downstream metrics and validators can read
       # it unchanged.
-      # But, NMF is only defined on non-negative input; needs extra excludes.
       - id: pc_rcppml_nmf
         requires: {nonneg: "yes", runs_pca: "yes"}
         name: "RcppML NMF (cpu)"
@@ -384,10 +384,10 @@ stages:
       # GPU variants.
       # We split so that the DAG can run on GPU-less hosts
       - id: pc_rcppml_gpu
-        requires: {runs_pca: "yes"}
         name: "RcppML truncated SVD (GPU)"
-        software_environment: "rcppml"
+        requires: {runs_pca: "yes"}
         requires_capabilities: [gpu]
+        software_environment: "rcppml"
         repository:
           url: https://github.com/omni-scrna/rcppml
           commit: api-0.8.0
@@ -399,8 +399,8 @@ stages:
             backend: gpu
 
       - id: pc_rcppml_nmf_gpu
-        requires: {nonneg: "yes", runs_pca: "yes"}
         name: "RcppML NMF (GPU)"
+        requires: {nonneg: "yes", runs_pca: "yes"}
         requires_capabilities: [gpu]
         software_environment: "rcppml"
         repository:
@@ -968,7 +968,6 @@ stages:
           commit: api-0.8.0
           entrypoint: pca-results
 
-  # REPORT_PCA: one Quarto HTML over the PCA_RESULTS table -> out/reports/pca.html
   - id: REPORT_PCA
     gather:
       from: pca_results_tsv
