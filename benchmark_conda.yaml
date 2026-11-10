@@ -439,10 +439,11 @@ stages:
             random_seed: 42
 
   - id: EMBED_M
-    # ~12 GB and 4 min per 28k-cell embedding (all-pairs poem metrics): cores is the only
-    # concurrency lever here, 4 of 32 = 8 at once. Not a memory cap; revisit before a --cores 160 run.
+    # Measured on be1 (27,815 cells): 12.0 GB peak, 4 min, one core. poem's metrics are
+    # all-pairs, so memory grows with n_cells^2: raise this for larger datasets.
+    # Snakemake only enforces it under a global budget: ob run ... -- --resources mem_mb=<MB>
     resources:
-      cores: 4
+      mem_mb: 16000
     inputs:
       - embedding_tsv
       - rawdata_clusters_truth
