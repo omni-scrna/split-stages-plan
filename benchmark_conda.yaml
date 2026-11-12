@@ -5,7 +5,7 @@ benchmarker: "Mark Robinson <mark.robinson@mls.uzh.ch>"
 
 # Benchmark configuration
 version: "0.2.0"
-api_version: "0.4.0"
+api_version: "0.8.0"
 
 provenance:
   canonical_url: https://raw.githubusercontent.com/omni-scrna/split-stages-plan/refs/heads/main/benchmark_conda.yaml
@@ -62,6 +62,9 @@ software_environments:
   # and are pruned from the DAG unless the run passes `--with-capability gpu`.
   # That field needs omnibenchmark >= 0.7.0; older versions ignore it and would
   # schedule these modules on a CPU host; comment the modules by hand if you're on 0.6.0
+  report:
+    name: Quarto + R (knitr) for the REPORT gather
+    conda: envs/report.yaml
   rapids_singlecell:
     name: rapids-singlecell (GPU)
     conda: envs/rapids-singlecell.yml
@@ -80,22 +83,27 @@ software_environments:
 
 stages:
   - id: DATA
+    provides: [runs_feat, runs_pca, runs_intg8]
     outputs:
       - id: rawdata_h5ad
-        path: "{dataset}.h5ad"
+        path: "{module.id}.h5ad"
+        validators:
+          - script: validators/DATA/rawdata_h5ad/validate.py
+          - script: validators/DATA/rawdata_h5ad/sparse.py
       - id: rawdata_clusters_truth
-        path: "{dataset}.clusters_truth.tsv"
+        path: "{module.id}.clusters_truth.tsv"
       - id: rawdata_clusters_truth_num
-        path: "{dataset}.clusters_truth_num.txt"
+        path: "{module.id}.clusters_truth_num.txt"
       - id: properties_info
-        path: "{dataset}_properties.yaml"
+        path: "{module.id}_properties.yaml"
     modules:
-      - id: d-integration
+      - id: d_integration
+        provides: {runs_feat: "yes", runs_pca: "yes", runs_intg8: "yes"}
         name: "R-based dataset downloads (integration collection)"
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 4e4f1a5
+          commit: api-0.8.0
         parameters:
           - dataset_name: "be1"
             batch_var: Sample
@@ -105,34 +113,37 @@ stages:
             batch_var: study
             labels_var: clusters.truth
             sample_var: study
-      - id: d-pca
+      - id: d_pca
+        provides: {runs_pca: "yes"}
         name: "R-based dataset downloads (PCA collection)"
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 4e4f1a5
+          commit: api-0.8.0
         parameters:
           - dataset_name: "sc-mix"
             batch_var: null
             labels_var: cell_line
             sample_var: null
-      - id: d-feat-sel
+      - id: d_feat_sel
+        provides: {runs_feat: "yes"}
         name: "R-based dataset downloads (feature selection collection)"
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 4e4f1a5
+          commit: api-0.8.0
         parameters:
           - dataset_name: "be1-subset"
             batch_var: Sample
             labels_var: Sample
             sample_var: Sample
-      - id: d-annotation
+      - id: d_annotation
+        provides: {runs_feat: "yes"}
         name: "R-based dataset downloads (cell type annotation collection)"
         software_environment: r_conda
         repository:
           url: https://github.com/omni-scrna/1-data
-          commit: 4e4f1a5
+          commit: api-0.8.0
         parameters:
           - dataset_name: "cb"
             batch_var: species
@@ -145,51 +156,55 @@ stages:
       - properties_info
     outputs:
       - id: filtered_cellids
-        path: "{dataset}_cellids.txt.gz"
+        path: "{module.id}_cellids.txt.gz"
       - id: filtered_featureids
-        path: "{dataset}_featureids.txt.gz"
+        path: "{module.id}_featureids.txt.gz"
       - id: size_factor_tsv
-        path: "{dataset}_size_factors.tsv"
+        path: "{module.id}_size_factors.tsv"
     modules:
-      - id: fi-scrapper
+      - id: fi_scrapper
         name: "scrapper-style filtering"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 64e91bb
+          commit: api-0.8.0
           entrypoint: filter
 
   - id: NORM
+    provides: [nonneg]
     inputs:
       - rawdata_h5ad
       - filtered_cellids
       - filtered_featureids
     outputs:
       - id: normalized_h5
-        path: "{dataset}_normalized.h5"
+        path: "{module.id}_normalized.h5"
+        validators:
+          - script: validators/NORM/normalized_h5/validate.py
     modules:
-      - id: nr-scrapper
+      - id: nr_scrapper
+        provides: {nonneg: "yes"}
         name: "scrapper-based normalization"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: f201861
+          commit: api-0.8.0
           entrypoint: normalize
-      - id: nr-scanpy
+      - id: nr_scanpy
         name: "Python-based scRNA-seq normalization methods"
         software_environment: "py_conda"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: b5c6855
+          commit: api-0.8.0
           entrypoint: normalize
         parameters:
           - flavor: ["log1pCP10k", "analyticalPearsonResiduals"]
-      - id: nr-seurat
+      - id: nr_seurat
         name: "Seurat-based scRNA-seq normalization methods"
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 984d35a
+          commit: api-0.8.0
           entrypoint: normalize
         parameters:
           - flavor: ["sctransformv2"]
@@ -204,52 +219,51 @@ stages:
       - properties_info
     outputs:
       - id: normalized_selected_h5
-        path: "{dataset}_normalized_selected.h5"
+        path: "{module.id}_normalized_selected.h5"
+        validators:
+          - script: validators/FEAT/normalized_selected_h5/validate.py
     modules:
-      - id: fe-seurat
+      - id: fe_seurat
+        # TODO: move the requires to the stage level
+        requires: {runs_feat: "yes"}
         name: "seurat-based gene selection"
         software_environment: "seurat"
-        exclude:
-          - d-pca
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: a83045e
+          commit: api-0.8.0
           entrypoint: select
         parameters:
           - selection_type: ["seurat_vst", "seurat_vst_batch", "mixhvg"]
             number_selected: 2000
-      - id: fe-scrapper
+      - id: fe_scrapper
+        requires: {runs_feat: "yes"}
         name: "scrapper-based gene selection"
         software_environment: "scrapper"
-        exclude:
-          - d-pca
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: f201861
+          commit: api-0.8.0
           entrypoint: select
         parameters:
           - number_selected: 2000
-      - id: fe-scanpy
+      - id: fe_scanpy
+        requires: {runs_feat: "yes"}
         name: "scanpy-based gene selection"
         software_environment: "scanpy"
-        exclude:
-          - d-pca
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: 3076328
+          commit: api-0.8.0
           entrypoint: feat-select
         parameters:
           - flavor: ["pearson_residuals", "scanpy_seurat_v3"]
             number_selected: 2000
           #- flavor: ["pearson_residuals", "scanpy_seurat", "scanpy_cell_ranger"]
-      - id: fe-sam
+      - id: fe_sam
+        requires: {runs_feat: "yes"}
         name: "SAM gene selection"
         software_environment: "sam"
-        exclude:
-          - d-pca
         repository:
           url: https://github.com/omni-scrna/sam
-          commit: 6e736b3
+          commit: api-0.8.0
           entrypoint: select
         parameters:
           - number_selected: 2000
@@ -262,19 +276,19 @@ stages:
       - normalized_selected_h5
     outputs:
       - id: embedding_tsv
-        path: "{dataset}_embedding.tsv"
+        path: "{module.id}_embedding.tsv"
+        validators:
+          - script: validators/PCA/embedding_tsv/validate.R
       - id: loadings_tsv
-        path: "{dataset}_loadings.tsv"
+        path: "{module.id}_loadings.tsv"
     modules:
-      - id: pc-scanpy
+      - id: pc_scanpy
+        requires: {runs_pca: "yes"}
         name: "scanpy PCA"
         software_environment: "scanpy"
-        exclude:
-          - d-feat-sel
-          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: b41bf43
+          commit: api-0.8.0
           entrypoint: pca
         parameters:
           - solver: [arpack]
@@ -285,15 +299,29 @@ stages:
             dense: "true"
             n_components: 50
             random_seed: 42
-      - id: pc-scrapper
+      # Exact reference for PCA_M: dense LAPACK SVD in float64, one parameter
+      # set so PCA_M finds exactly one reference per input matrix.
+      - id: pc_exact
+        requires: {runs_pca: "yes"}
+        name: "scanpy PCA, exact reference (dense LAPACK SVD, float64)"
+        software_environment: "scanpy"
+        repository:
+          url: https://github.com/omni-scrna/scanpy
+          commit: api-0.8.0
+          entrypoint: pca
+        parameters:
+          - solver: full
+            dense: "true"
+            dtype: float64
+            n_components: 50
+            random_seed: 42
+      - id: pc_scrapper
+        requires: {runs_pca: "yes"}
         name: "scrapper PCA"
         software_environment: "scrapper"
-        exclude:
-          - d-feat-sel
-          - d-annotation
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: d641869
+          commit: api-0.8.0
           entrypoint: pca
         parameters:
           - solver: [irlba]
@@ -304,16 +332,14 @@ stages:
       # substitute, so our module raises rather than mis-report. Both of these
       # are the sparse-input solvers. covariance-eigh is the exact control
       # randomized-halko is seed-sensitive.
-      - id: pc-rapids
+      - id: pc_rapids
+        requires: {runs_pca: "yes"}
         name: "rapids-singlecell PCA (GPU)"
         software_environment: "rapids_singlecell"
         requires_capabilities: [gpu]
-        exclude:
-          - d-feat-sel
-          - d-annotation
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b28deb6
+          commit: api-0.8.0
           entrypoint: pca
         parameters:
           - solver: [covariance-eigh, randomized-halko]
@@ -321,15 +347,13 @@ stages:
             random_seed: 42
             dtype: float64
 
-      - id: pc-rcppml
+      - id: pc_rcppml
+        requires: {runs_pca: "yes"}
         name: "RcppML truncated SVD (cpu)"
         software_environment: "rcppml"
-        exclude:
-          - d-feat-sel
-          - d-annotation
         repository:
           url: https://github.com/omni-scrna/rcppml
-          commit: 47a7dd4
+          commit: api-0.8.0
           entrypoint: pca
         parameters:
           - solver: [lanczos, krylov]
@@ -339,23 +363,18 @@ stages:
       # Same stage, not strictly a PCA: nmf reads and writes the same
       # with factors named PC1..PCk so the downstream metrics and validators can read
       # it unchanged.
-      # But, NMF is only defined on non-negative input; needs extra excludes.
-      - id: pc-rcppml-nmf
+      - id: pc_rcppml_nmf
+        requires: {nonneg: "yes", runs_pca: "yes"}
         name: "RcppML NMF (cpu)"
         software_environment: "rcppml"
-        exclude:
-          - d-feat-sel
-          - d-annotation
-          # NMF is only defined on non-negative input, 
-          # That rules out the Pearson-residual normalisations:
-          # nr-seurat (sctransformv2) and nr-scanpy's
-          # analyticalPearsonResiduals. 
-          # TODO: Split nr-scanpy's two flavors into separate module ids to get the log one.
-          - nr-seurat
-          - nr-scanpy
+        # NMF is only defined on non-negative input, 
+        # That rules out the Pearson-residual normalisations:
+        # nr_seurat (sctransformv2) and nr_scanpy's
+        # analyticalPearsonResiduals. 
+        # TODO: Split nr_scanpy's two flavors into separate module ids to get the log one.
         repository:
           url: https://github.com/omni-scrna/rcppml
-          commit: 47a7dd4
+          commit: api-0.8.0
           entrypoint: nmf
         parameters:
           - loss: [mse]
@@ -364,16 +383,14 @@ stages:
 
       # GPU variants.
       # We split so that the DAG can run on GPU-less hosts
-      - id: pc-rcppml-gpu
+      - id: pc_rcppml_gpu
         name: "RcppML truncated SVD (GPU)"
-        software_environment: "rcppml"
+        requires: {runs_pca: "yes"}
         requires_capabilities: [gpu]
-        exclude:
-          - d-feat-sel
-          - d-annotation
+        software_environment: "rcppml"
         repository:
           url: https://github.com/omni-scrna/rcppml
-          commit: 47a7dd4
+          commit: api-0.8.0
           entrypoint: pca
         parameters:
           - solver: [lanczos, krylov]
@@ -381,18 +398,14 @@ stages:
             random_seed: 42
             backend: gpu
 
-      - id: pc-rcppml-nmf-gpu
+      - id: pc_rcppml_nmf_gpu
         name: "RcppML NMF (GPU)"
+        requires: {nonneg: "yes", runs_pca: "yes"}
         requires_capabilities: [gpu]
         software_environment: "rcppml"
-        exclude:
-          - d-feat-sel
-          - d-annotation
-          - nr-seurat
-          - nr-scanpy
         repository:
           url: https://github.com/omni-scrna/rcppml
-          commit: 47a7dd4
+          commit: api-0.8.0
           entrypoint: nmf
         parameters:
           - loss: [mse]
@@ -407,11 +420,11 @@ stages:
       - normalized_selected_h5
     outputs:
       - id: embedding_tsv
-        path: "{dataset}_embedding.tsv"
+        path: "{module.id}_embedding.tsv"
       - id: geodesics_h5
-        path: "{dataset}_geodesics.h5"
+        path: "{module.id}_geodesics.h5"
     modules:
-      - id: dr-isomap
+      - id: dr_isomap
         name: "sklearn (landmark) Isomap"
         software_environment: "sklearn"
         repository:
@@ -425,20 +438,25 @@ stages:
             landmark_method: min-max
             random_seed: 42
 
-  - id: EMBED-M
+  - id: EMBED_M
+    # Measured on be1 (27,815 cells): 12.0 GB peak, 4 min, one core. poem's metrics are
+    # all-pairs, so memory grows with n_cells^2: raise this for larger datasets.
+    # Snakemake only enforces it under a global budget: ob run ... -- --resources mem_mb=<MB>
+    resources:
+      mem_mb: 16000
     inputs:
       - embedding_tsv
       - rawdata_clusters_truth
     outputs:
       - id: embedding_metrics
-        path: "{dataset}_embedding_metrics.json"
+        path: "{module.id}_embedding_metrics.json"
     modules:
-      - id: em-metrics-r
+      - id: em_metrics_r
         name: "Embedding metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 2b9b1a3
+          commit: api-0.8.0
           entrypoint: embedding-r
       #- id: em-metrics-py
       #  name: "Embedding metrics in python"
@@ -453,28 +471,28 @@ stages:
       - embedding_tsv
     outputs:
       - id: neighbors_h5
-        path: "{dataset}_neighbors.h5"
+        path: "{module.id}_neighbors.h5"
     modules:
-      - id: nn-scanpy
+      - id: nn_scanpy
         name: "scanpy KNN graph"
         software_environment: "scanpy"
-        exclude:
-          - cntfct
+        # exclude:   # is this needed? cntfct exclude from 65a3384, reason unknown; off for now
+        #   - cntfct
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: b41bf43
+          commit: api-0.8.0
           entrypoint: knn
         parameters:
           - n_neighbors: 15
             random_seed: 42
             flavor: "umap"
-      - id: nn-rapids
+      - id: nn_rapids
         name: "rapids-singlecell KNN graph (GPU)"
         software_environment: "rapids_singlecell"
         requires_capabilities: [gpu]
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b28deb6
+          commit: api-0.8.0
           entrypoint: knn
         parameters:
           # rsc.pp.neighbors at the cuVS default
@@ -482,34 +500,35 @@ stages:
             random_seed: 42
             flavor: "rapids"
 
-  - id: GRAPH-M
+  # GRAPH_M: graph metrics, one JSON per kNN graph.
+  - id: GRAPH_M
     inputs:
       - neighbors_h5
       - rawdata_clusters_truth
     outputs:
-      - id: graph_metrics
-        path: "{dataset}_graph_metrics.json"
+      - id: graph_metrics_json
+        path: "{module.id}_graph_metrics.json"
     modules:
-      - id: nn-metrics-r
+      - id: nn_metrics_r
         name: "Graph metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 2b9b1a3
+          commit: api-0.8.0
           entrypoint: graph-r
 
-  - id: GEOM-M
+  - id: GEOM_M
     inputs:
       - normalized_selected_h5
       - embedding_tsv
       - neighbors_h5
     outputs:
       - id: geometry_metrics
-        path: "{dataset}_geometry_metrics.json"
+        path: "{module.id}_geometry_metrics.json"
       - id: geometry_pair_summary
-        path: "{dataset}_geometry_pair_summary.tsv"
+        path: "{module.id}_geometry_pair_summary.tsv"
     modules:
-      - id: geometry-metrics-py
+      - id: geometry_metrics_py
         name: "Pairwise representation geometry metrics"
         software_environment: "metrics"
         repository:
@@ -522,25 +541,25 @@ stages:
       - neighbors_h5
     outputs:
       - id: clusters_tsv
-        path: "{dataset}_clusters.tsv"
+        path: "{module.id}_clusters.tsv"
     modules:
-      - id: cl-scanpy
+      - id: cl_scanpy
         name: "scanpy Leiden clustering"
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: b41bf43
+          commit: api-0.8.0
           entrypoint: cluster
         parameters:
           - flavor: ["igraph", "leidenalg"]
             resolution: [0.5, 1.0]
             random_seed: 42
-      - id: cl-seurat
+      - id: cl_seurat
         name: "Seurat clustering"
         software_environment: "seurat"
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: 537d178
+          commit: api-0.8.0
           entrypoint: cluster
         parameters:
           - resolution: [0.5, 1.0]
@@ -555,25 +574,25 @@ stages:
         #    resolution: [0.5, 1.0]
         #    random_seed: 42
         #  #- modularity_algorithm: ["louvain_original", "louvain_multilevel_refinement", "slm", "leiden"]
-      - id: cl-scrapper
+      - id: cl_scrapper
         name: "Scrapper clustering"
         software_environment: "scrapper"
         repository:
           url: https://github.com/omni-scrna/scrapper
-          commit: 8a1cfd8
+          commit: api-0.8.0
           entrypoint: cluster
         parameters:
           - flavor: ["leiden_modularity", "leiden_cpm", "multilevel", "walktrap"]
             resolution: [0.5, 1.0]
             walktrap_steps: [2, 4]
             random_seed: 42
-      - id: cl-rapids
+      - id: cl_rapids
         name: "rapids-singlecell graph clustering (GPU)"
         software_environment: "rapids_singlecell"
         requires_capabilities: [gpu]
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b28deb6
+          commit: api-0.8.0
           entrypoint: cluster
         parameters:
           - method: "rapids-leiden"
@@ -583,20 +602,20 @@ stages:
           - method: "rapids-louvain"
             resolution: [0.5, 1.0]
 
-  - id: CLUST-M
+  - id: CLUST_M
     inputs:
       - clusters_tsv
       - rawdata_clusters_truth
     outputs:
       - id: cluster_metrics
-        path: "{dataset}_cluster_metrics.json"
+        path: "{module.id}_cluster_metrics.json"
     modules:
-      - id: cl-metrics-r
+      - id: cl_metrics_r
         name: "Partition metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 2b9b1a3
+          commit: api-0.8.0
           entrypoint: cluster-r
 
   - id: INTG8
@@ -608,45 +627,39 @@ stages:
       - properties_info
     outputs:
       - id: corrected_tsv
-        path: "{dataset}_corrected.tsv"
+        path: "{module.id}_corrected.tsv"
     modules:
-      - id: in-harmony
+      - id: in_harmony
+        requires: {runs_intg8: "yes"}
         name: "Harmony batch correction"
         software_environment: "integrate"
-        exclude:
-          - cntfct
-          - d-pca
-          - d-annotation
-          - d-feat-sel
+        # exclude:   # is this needed? cntfct exclude from 65a3384, reason unknown; off for now
+        #   - cntfct
         repository:
           url: https://github.com/omni-scrna/7-integrate
           commit: 52c6c64
           entrypoint: harmony-r
         parameters:
           - theta: [0.1, 2]
-      - id: in-seurat
+      - id: in_seurat
+        requires: {runs_intg8: "yes"}
         name: "Seurat IntegrateLayers batch correction"
         software_environment: "seurat"
-        exclude:
-          - d-pca
-          - d-annotation
-          - d-feat-sel
-          - cntfct
+        # exclude:   # is this needed? cntfct exclude from 65a3384, reason unknown; off for now
+        #   - cntfct
         repository:
           url: https://github.com/omni-scrna/seurat
-          commit: db6c6ba
+          commit: api-0.8.0
           entrypoint: integrate
         parameters:
           - method: [rpca]
             k_anchor: [5, 20]
-      - id: in-scanorama
+      - id: in_scanorama
+        requires: {runs_intg8: "yes"}
         name: "Scanorama batch correction"
         software_environment: "integrate-py"
-        exclude:
-          - d-pca
-          - d-annotation
-          - d-feat-sel
-          - cntfct
+        # exclude:   # is this needed? cntfct exclude from 65a3384, reason unknown; off for now
+        #   - cntfct
         repository:
           url: https://github.com/omni-scrna/7-integrate-py
           commit: e005eb5
@@ -655,7 +668,7 @@ stages:
           - knn: [20]
             sigma: [15]
 
-  - id: INTG8-M
+  - id: INTG8_M
     inputs:
       - corrected_tsv
       - rawdata_clusters_truth
@@ -665,9 +678,9 @@ stages:
       - clusters_corrected_tsv
     outputs:
       - id: integration_metrics
-        path: "{dataset}_integration_metrics.json"
+        path: "{module.id}_integration_metrics.json"
     modules:
-      - id: in-metrics-r
+      - id: in_metrics_r
         name: "Integration metrics in R"
         software_environment: "metrics"
         repository:
@@ -680,7 +693,7 @@ stages:
             cell_min: 10 # min cells per batch for cms's Anderson-Darling test
             ldf_k: 75 # knn size for CellMixS ldfDiff (matches ldfDiff's own default)
             ldf_n_dim: 20 # pre/post dims used for ldfDiff's LDF subspace (matches ldfDiff's own default)
-      - id: in-metrics-py
+      - id: in_metrics_py
         name: "Integration metrics in python (scib-metrics + sklearn)"
         software_environment: "metrics"
         repository:
@@ -691,52 +704,52 @@ stages:
           - n_neighbors: 90 # knn graph size for clisi_knn (pynndescent)
             random_state: 0 # random seed for the pynndescent approximate KNN search
 
-  - id: NNG-C
+  - id: NNG_C
     inputs:
       - corrected_tsv
     outputs:
       - id: neighbors_corrected_h5
-        path: "{dataset}_neighbors.h5"
+        path: "{module.id}_neighbors.h5"
     modules:
-      - id: nn-scanpy-c
+      - id: nn_scanpy_c
         name: "scanpy KNN graph (corrected embedding)"
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: b41bf43
+          commit: api-0.8.0
           entrypoint: knn
         parameters:
           - n_neighbors: 15
             random_seed: 42
             flavor: "umap"
 
-  - id: CLUST-C
+  - id: CLUST_C
     inputs:
       - neighbors_corrected_h5
     outputs:
       - id: clusters_corrected_tsv
-        path: "{dataset}_clusters.tsv"
+        path: "{module.id}_clusters.tsv"
     modules:
-      - id: cl-scanpy-c
+      - id: cl_scanpy_c
         name: "scanpy Leiden clustering (corrected embedding)"
         software_environment: "scanpy"
         repository:
           url: https://github.com/omni-scrna/scanpy
-          commit: b41bf43
+          commit: api-0.8.0
           entrypoint: cluster
         parameters:
           - flavor: ["igraph", "leidenalg"]
             resolution: [0.5, 1.0]
             random_seed: 42
 
-  - id: CLUST-E
+  - id: CLUST_E
     inputs:
       - embedding_tsv
     outputs:
       - id: clusters_embedding_tsv
-        path: "{dataset}_clusters.tsv"
+        path: "{module.id}_clusters.tsv"
     modules:
-      - id: cluster-optics
+      - id: cluster_optics
         name: "scikit-learn OPTICS clustering"
         software_environment: "py_conda"
         repository:
@@ -756,20 +769,20 @@ stages:
             cluster_method: "xi"
             xi: 0.05
             random_seed: 42
-      - id: cl-rapids-embed
+      - id: cl_rapids_embed
         name: "rapids-singlecell embedding clustering (GPU)"
         software_environment: "rapids_singlecell"
         requires_capabilities: [gpu]
         repository:
           url: https://github.com/omni-scrna/rapids-singlecell
-          commit: b28deb6
+          commit: api-0.8.0
           entrypoint: cluster_embedding
         parameters:
           - method: "rapids-kmeans"
             n_clusters: [10, 20]
             random_seed: 42
           # hdbscan and dbscan have no seed parameter; 
-          # Both emit -1 for noise points, which CLUST-M has to handle.
+          # Both emit -1 for noise points, which CLUST_M has to handle.
           - method: "rapids-hdbscan"
             min_samples: [10, 30]
             min_cluster_size: 25
@@ -786,9 +799,9 @@ stages:
       - normalized_selected_h5
     outputs:
       - id: annotations_tsv
-        path: "{dataset}_annotations.tsv"
+        path: "{module.id}_annotations.tsv"
     modules:
-      - id: an-singler
+      - id: an_singler
         name: singler annotation
         software_environment: annotate
         repository:
@@ -797,15 +810,15 @@ stages:
         parameters:
           - reference: ["HumanPrimaryCellAtlasData", "BlueprintEncodeData"]
 
-  - id: ANNO-M
+  - id: ANNO_M
     inputs:
       - annotations_tsv
       - rawdata_clusters_truth
     outputs:
       - id: annotation_metrics
-        path: "{dataset}_annotation_metrics.json"
+        path: "{module.id}_annotation_metrics.json"
     modules:
-      - id: an-metrics-r
+      - id: an_metrics_r
         name: "Annotation metrics in R"
         software_environment: "metrics"
         repository:
@@ -822,9 +835,9 @@ stages:
       - filtered_cellids
     outputs:
       - id: embedding_tsv
-        path: "{dataset}_embedding.tsv"
+        path: "{module.id}_embedding.tsv"
       - id: loadings_tsv
-        path: "{dataset}_loadings.tsv"
+        path: "{module.id}_loadings.tsv"
     modules:
       - id: cntfct
         name: count-factor
@@ -852,15 +865,15 @@ stages:
       - filtered_featureids
     outputs:
       - id: embedding_tsv
-        path: "{dataset}_embedding.tsv"
+        path: "{module.id}_embedding.tsv"
       - id: loadings_tsv
-        path: "{dataset}_loadings.tsv"
+        path: "{module.id}_loadings.tsv"
     modules:
       # Biwhitened PCA (Stanley et al.): Sinkhorn under a quadratic
       # mean-variance fit, truncated at the Marchenko-Pastur edge, so k is
       # derived, not fixed. Runs on every FILT gene: it needs the noise genes to
       # place the MP edge. --min_gene_cells drops near-empty ones on top.
-      - id: rd-bipca
+      - id: rd_bipca
         name: "BiPCA biwhitened PCA"
         software_environment: "bipca"
         repository:
@@ -872,7 +885,7 @@ stages:
       # scVI latent space on its own seurat_v3 HVGs (scvi-tools' recipe), so its
       # genes are not a FEAT arm's. The decoder is a nonlinear MLP with no linear
       # gene loadings, so loadings_tsv is written NaN (LinearSCVI would have them).
-      - id: rd-scvi
+      - id: rd_scvi
         name: "scVI latent representation"
         software_environment: "scvi"
         repository:
@@ -888,7 +901,7 @@ stages:
       # against a shuffled null, then a perturbation test on what survives, so k
       # is derived. Every FILT gene; drops genes in < 15 cells, never cells.
       # GPU-only: upstream crashes on CPU when cells > genes.
-      - id: rd-sclens
+      - id: rd_sclens
         name: "scLENS RMT signal detection (GPU)"
         software_environment: "sclens"
         requires_capabilities: [gpu]
@@ -899,18 +912,74 @@ stages:
         parameters:
           - random_seed: 42
 
-  - id: NORM-M
+  - id: NORM_M
     inputs:
       - embedding_tsv
       - size_factor_tsv
     outputs:
       - id: normalization_metrics
-        path: "{dataset}_normalization_metrics.json"
+        path: "{module.id}_normalization_metrics.json"
     modules:
-      - id: nm-metrics-r
+      - id: nm_metrics_r
         name: "Normalization metrics in R"
         software_environment: "metrics"
         repository:
           url: https://github.com/omni-scrna/metrics
-          commit: 2b9b1a3
+          commit: api-0.8.0
           entrypoint: normalization-r
+
+  # PCA_M: every PCA arm vs pc_exact on the same input matrix.
+  # one gather per FEAT node: one pc_exact per group, and the
+  # FEAT matrix as input for variance explained.
+  - id: PCA_M
+    inputs:
+      - normalized_selected_h5
+    gather:
+      group_by: FEAT
+      from: [embedding_tsv, loadings_tsv]
+    outputs:
+      - id: pca_metrics_tsv
+        path: "{module.id}_pca_metrics.tsv"
+    modules:
+      - id: pca_metrics_py
+        name: "PCA accuracy vs exact reference"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: api-0.8.0
+          entrypoint: pca-gather
+        parameters:
+          - reference_module: pc_exact
+
+  # PCA_RESULTS: every PCA_M table concatenated into one (global gather).
+  - id: PCA_RESULTS
+    gather:
+      from: pca_metrics_tsv
+      path: results
+    outputs:
+      - id: pca_results_tsv
+        path: "pca_results.tsv"
+    modules:
+      - id: pca_results
+        name: "PCA metrics, all tables row-bound"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: api-0.8.0
+          entrypoint: pca-results
+
+  - id: REPORT_PCA
+    gather:
+      from: pca_results_tsv
+      path: reports
+    outputs:
+      - id: report_html
+        path: "pca.html"
+    modules:
+      - id: pca_report
+        name: "PCA accuracy report (Quarto)"
+        software_environment: "report"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: api-0.8.0
+          entrypoint: pca-report

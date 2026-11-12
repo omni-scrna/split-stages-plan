@@ -11,20 +11,20 @@ python = "*"
 h5py = "*"
 scanpy = "*"
 
-# Plan validation: omnibenchmark pinned to the v0.7.0 tag.
+# Plan validation: omnibenchmark pinned to the consolidated api-0.8.0 gather branch (omnibenchmark PR #416, which absorbed #406 #410 #415); back to omnibenchmark main once it merges.
 [feature.plan.dependencies]
 python = ">=3.12,<3.14"
 pip = "*"
 # conda so `ob run` (snakemake --use-conda) has a backend in-env, no system
 # conda required. conda ships the fast libmamba solver, so mamba is not needed.
 conda = "*"
-# mikefarah's yq, used by ci/trim-plan.sh. Keep it in-env so CI never falls back
+# mikefarah's yq, used by ci/fixture-plan.sh. Keep it in-env so CI never falls back
 # to a host-installed snap yq (snap-confine can't run inside the self-hosted
 # runner's systemd service cgroup).
 go-yq = "*"
 
 [feature.plan.pypi-dependencies]
-omnibenchmark = { git = "https://github.com/omnibenchmark/omnibenchmark.git", tag = "v0.7.0" }
+omnibenchmark = { git = "https://github.com/btraven00/omnibenchmark.git", branch = "feat/fanin-manifest" }
 
 [feature.plan.tasks]
 validate-plan = "ob validate plan benchmark_conda.yaml"
