@@ -60,7 +60,7 @@ jobs:
       - name: Build module conda envs
         run: |
           pixi run -e plan ob run benchmark_ci.yaml --filter filters/ci-until-pca.yaml \
-            --out-dir out_ci --cores 4 --yes -- --conda-create-envs-only
+            --out-dir out_ci --cores 4 --yes --unpinned -- --conda-create-envs-only
 
       - name: Save module conda envs
         if: always() && steps.conda-cache.outputs.cache-hit != 'true'
@@ -72,7 +72,7 @@ jobs:
       - name: Run fixture benchmark (DATA..PCA + PCA_M/PCA_RESULTS/REPORT_PCA)
         run: |
           pixi run -e plan ob run benchmark_ci.yaml --filter filters/ci-until-pca.yaml \
-            --out-dir out_ci --cores 4 --yes
+            --out-dir out_ci --cores 4 --yes --unpinned
 
       # Validators need python3/Rscript with h5py, scanpy, readr: the validation
       # env first on PATH. Call the plan env's ob directly: `pixi run -e plan`
