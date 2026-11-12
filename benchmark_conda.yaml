@@ -314,7 +314,7 @@ stages:
             dense: "true"
             dtype: float64
             n_components: 50
-            #random_seed: 42
+            random_seed: 42
       - id: pc_scrapper
         requires: {runs_pca: "yes"}
         name: "scrapper PCA"
