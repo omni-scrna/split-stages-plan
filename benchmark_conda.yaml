@@ -429,7 +429,7 @@ stages:
         software_environment: "sklearn"
         repository:
           url: https://github.com/omni-scrna/sklearn
-          commit: 00d3afc
+          commit: api-0.8.0
           entrypoint: isomap
         parameters:
           - n_neighbors: [30]
