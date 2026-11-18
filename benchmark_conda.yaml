@@ -438,18 +438,24 @@ stages:
             landmark_method: min-max
             random_seed: 42
 
+  # EMBED_M: one gather per dataset (DATA node). Every embedding_tsv under it
+  # (PCA, ISOMAP, CNTFCT, RDIMR) is scored in turn against that dataset's truth
+  # labels, into one long table. Truth comes in as the DATA node's own input:
+  # a member must produce every gathered id, so it cannot be a second `from`.
   - id: EMBED_M
-    # Measured on be1 (27,815 cells): 12.0 GB peak, 4 min, one core. poem's metrics are
-    # all-pairs, so memory grows with n_cells^2: raise this for larger datasets.
-    # Snakemake only enforces it under a global budget: ob run ... -- --resources mem_mb=<MB>
+    # Measured on be1 (27,815 cells): 12.0 GB peak, 4 min, one core, per embedding.
+    # poem's metrics are all-pairs, so memory grows with n_cells^2: raise this for
+    # larger datasets. Members run one after another, so the peak stays per embedding.
     resources:
       mem_mb: 16000
     inputs:
-      - embedding_tsv
       - rawdata_clusters_truth
+    gather:
+      group_by: DATA
+      from: [embedding_tsv]
     outputs:
-      - id: embedding_metrics
-        path: "{module.id}_embedding_metrics.json"
+      - id: embedding_metrics_tsv
+        path: "{module.id}_embedding_metrics.tsv"
     modules:
       - id: em_metrics_r
         name: "Embedding metrics in R"
