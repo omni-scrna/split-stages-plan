@@ -15,7 +15,7 @@
 # --- CPUs & memory ---
 #SBATCH --nodes=1                    # Number of nodes
 #SBATCH --ntasks=1                   # Number of tasks (MPI ranks)
-#SBATCH --cpus-per-task=50           # CPU cores per task
+#SBATCH --cpus-per-task=10           # CPU cores per task
 #SBATCH --mem=100G                   # Total memory per node (e.g. 8G, 32G)
 # --mem-per-cpu=4G                   # Alternative: memory per CPU core
 
@@ -45,7 +45,7 @@ echo "=============================================="
 # Slurm jobs often start with a bare environment, so we source conda explicitly.
 # Adjust the path below to match your conda/mamba installation.
 
-CONDA_ENV="omni-gather"                   # <-- set your environment name here
+CONDA_ENV="omni-dev"                   # <-- set your environment name here
 
 # Try common conda installation paths; adjust if yours differs
 CONDA_BASE="$HOME/miniforge3"
@@ -74,7 +74,7 @@ mkdir -p logs
 # ==============================================================================
 
 # Example: run a script
-ob run benchmark_minimal.yaml -c 48 --with-capability gpu --unpinned
+ob run benchmark_conda.yaml -c 10 --with-capability gpu --unpinned --until DATA
 
 # ==============================================================================
 echo "Finished:  $(date)"
