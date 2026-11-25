@@ -17,3 +17,4 @@ dependencies:
 - python-igraph >=1.0.0,<2
 - leidenalg >=0.11.0,<0.12
 - obkit
+- umap-learn<0.6
