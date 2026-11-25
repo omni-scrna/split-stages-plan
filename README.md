@@ -7,7 +7,7 @@ This benchmark lays out stages for each step of an scRNA-seq pipeline
 
 ## Overview
 
-This benchmark was created using [OmniBenchmark](https://omnibenchmark.org) v0.5.0, a framework for automated scientific benchmarking.
+This benchmark is aligned with the v0.8.0 API of [OmniBenchmark](https://omnibenchmark.org), a framework for automated scientific benchmarking.
 
 ## Author
 
@@ -21,12 +21,12 @@ This project is licensed under the MIT License.
 
 1. Install OmniBenchmark:
    ```bash
-   pip install omnibenchmark
+   pip install omnibenchmark  # as of Nov 2026, need 'main' branch
    ```
 
 2. Run the benchmark:
    ```bash
-   ob run benchmark.yaml
+   ob run --cores 4 benchmark_conda.yaml
    ```
 
 ## Run output validatoin
