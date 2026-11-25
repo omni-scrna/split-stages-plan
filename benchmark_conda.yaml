@@ -440,14 +440,17 @@ stages:
 
   # EMBED_M: one gather per dataset (DATA node). Every embedding_tsv under it
   # (PCA, ISOMAP, CNTFCT, RDIMR) is scored in turn against that dataset's truth
-  # labels, into one long table. Truth comes in as the DATA node's own input:
+  # labels, into two long tables: one row per (embedding, metric), and one per
+  # (embedding, truth label, metric). Truth comes in as the DATA node's own input:
   # a member must produce every gathered id, so it cannot be a second `from`.
   - id: EMBED_M
-    # Measured on be1 (27,815 cells): 12.0 GB peak, 4 min, one core, per embedding.
-    # poem's metrics are all-pairs, so memory grows with n_cells^2: raise this for
-    # larger datasets. Members run one after another, so the peak stays per embedding.
+    # em_metrics_r (poem), measured on be1 (27,815 cells): 12.0 GB peak, 4 min, one
+    # core, per embedding; all-pairs, so memory grows with n_cells^2, and members
+    # run one after another. em_metrics_py scores `cores` members at once (ob
+    # exports cores as OMP_NUM_THREADS), each in chunks of ~1 GB.
     resources:
       mem_mb: 16000
+      cores: 8
     inputs:
       - rawdata_clusters_truth
     gather:
@@ -456,6 +459,8 @@ stages:
     outputs:
       - id: embedding_metrics_tsv
         path: "{module.id}_embedding_metrics.tsv"
+      - id: embedding_class_metrics_tsv
+        path: "{module.id}_embedding_class_metrics.tsv"
     modules:
       - id: em_metrics_r
         name: "Embedding metrics in R"
@@ -464,13 +469,13 @@ stages:
           url: https://github.com/omni-scrna/metrics
           commit: api-0.8.0
           entrypoint: embedding-r
-      #- id: em-metrics-py
-      #  name: "Embedding metrics in python"
-      #  software_environment: "metrics"
-      #  repository:
-      #    url: https://github.com/omni-scrna/metrics
-      #    commit: 2b9b1a3
-      #    entrypoint: embedding-py
+      - id: em_metrics_py
+        name: "Embedding metrics in python (scikit-learn)"
+        software_environment: "metrics"
+        repository:
+          url: https://github.com/omni-scrna/metrics
+          commit: api-0.8.0
+          entrypoint: embedding-py
 
   - id: NNG
     inputs:
